@@ -33,10 +33,21 @@ public class JobClient {
 				try {
 					byte []jobStatusResponseData = in.getJobStatus(jobSubmitResponseData);
 					JobStatusResponse jsResponse = new JobStatusResponse(jobStatusResponseData);
-					if(jsResponse.jobDone)
-							break;
+					if(jsResponse.jobDone){
+						System.out.println("JobId : " + jobSubmitResponse.jobId + " 100% Completed !!");
+						break;
+					}
+						
 					else{
 						//TODO print the Job Completion status 
+						if(jsResponse.numMapTasksStarted < jsResponse.totalMapTasks){
+							System.out.println("JobId : " + jobSubmitResponse.jobId +" -->" + (jsResponse.numMapTasksStarted / jsResponse.totalMapTasks) + "% of MapTask Started");
+						}
+
+						if(jsResponse.numReduceTasksStarted < jsResponse.totalReduceTasks){
+							System.out.println("JobId : " + jobSubmitResponse.jobId +" -->" + (jsResponse.numReduceTasksStarted / jsResponse.totalReduceTasks) + "% of ReduceTask Started");
+						}
+
 					}
 				}
 				catch(Exception e){
