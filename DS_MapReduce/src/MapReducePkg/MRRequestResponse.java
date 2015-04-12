@@ -229,8 +229,8 @@ public interface MRRequestResponse {
 	}
 	public class HeartBeatRequest{
 		public int taskTrackerId,numMapSlotsFree,numReduceSlotsFree;
-		ArrayList<MapTaskStatus> mapStatus;
-		ArrayList<ReduceTaskStatus> reduceStatus;
+		public ArrayList<MapTaskStatus> mapStatus;
+		public ArrayList<ReduceTaskStatus> reduceStatus;
 		public HeartBeatRequest(){
 			
 		}
@@ -285,6 +285,11 @@ public interface MRRequestResponse {
 	public class MapTaskInfo{
 		public int jobId,taskId,inputBlocks;
 		public String mapName;
+		public boolean equals(MapTaskInfo mapTask){
+			if(this.jobId == mapTask.jobId && this.taskId == mapTask.taskId)
+			return true;
+			else return false;
+		}
 		public MapTaskInfo(){
 			
 		}
@@ -333,7 +338,7 @@ public interface MRRequestResponse {
 	public class ReducerTaskInfo{
 		public int jobId,taskId;
 		public String reducerName,outputFile;
-		ArrayList<String> mapOutputFiles;
+		public ArrayList<String> mapOutputFiles;
 		public ReducerTaskInfo(){
 			
 		}
