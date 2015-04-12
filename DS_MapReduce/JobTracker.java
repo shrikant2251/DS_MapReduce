@@ -5,6 +5,7 @@ import java.util.HashMap;
 
 import HDFSPackage.INameNode;
 import HDFSPackage.RequestResponse.*;
+import MapReducePkg.MapReduce.HeartBeatRequest;
 import MapReducePkg.MRRequestResponse.*;
 
 public class JobTracker implements IJobTracker{
@@ -78,25 +79,9 @@ public class JobTracker implements IJobTracker{
 		}
 		return blockLocationResponse.blockLocations;
 	}
-	/*void startJob(int jobId){
-		ArrayList<BlockLocations> blocks = DSForJT.jobIdtoTaskTracker.get(jobId);
-		for(BlockLocations blk : blocks){
-			ArrayList<DataNodeLocation> taskTrackerLocation = new ArrayList<DataNodeLocation>();
-			for(int i=0;i<taskTrackerLocation.size();i++){
-				int tId = DSForJT.TaskTrackerToTTid.get(taskTrackerLocation.get(i));
-				if(DSForJT.taskTrackerSlots.get(tId).mapSlots > 0){
-					//TODO call the mapTask of TaskTracker
-					//Assign TaskId and send the map Task to TaskTracker
-					break;
-				}
-				if((i+1) == taskTrackerLocation.size()){
-					//TODO call the mapTask of TaskTracker
-					//Assign TaskId and send  map Task to TaskTracker
-					break;
-				}
-			}
-		}
-	}*/
+	void startJob(int JobId){
+			
+	}
 	@Override
 	/* JobSubmitResponse jobSubmit(JobSubmitRequest) */
 	public byte[] jobSubmit(byte[] jobSubmitRequest) {
@@ -117,41 +102,20 @@ public class JobTracker implements IJobTracker{
 			System.out.println("Jobtracker jobSubmit method OpenFileResponse Failed ");
 			return jsResponse.toProto();
 		}
-		//  obtain the block locations to determine the number of map tasks required.
-		//	BlockLocationRequest blockLocationRequest = new BlockLocationRequest(openFileResponse.blockNums);
-		ArrayList<BlockLocations> blockLocations = getBlockLocations(openFileResponse.blockNums);
- 
+//		obtain the block locations to determine the number of map tasks required.
+	//	BlockLocationRequest blockLocationRequest = new BlockLocationRequest(openFileResponse.blockNums);
+		ArrayList<BlockLocations> tempLocations = getBlockLocations(openFileResponse.blockNums);
+		ArrayList<BlockLocations> blockLocations = new ArrayList<BlockLocations>();
+		for(BlockLocations block:tempLocations){
+			blockLocations.add(block);
+		}
 		//TODO Number of Maptask equal to number of blockLocations obtained
 		
 		jsResponse.status = 1;
-		jsResponse.jobId = DSForJT.jobId++;
+		jsResponse.jobId = DataStructuresForJobTracker.jobId++;
 		//TODO Keep HashMap of JobId to TaskTrackers or blockLocations used later in getJobStatus
-		DSForJT.jobIdtoTaskTracker.put(jsResponse.jobId, blockLocations);
-		for(BlockLocations block : blockLocations){
-			JobIdTaskId tempJobTask = new JobIdTaskId();
-			tempJobTask.jobId = jsResponse.jobId;
-			tempJobTask.taskId = DSForJT.taskId++;
-			for(DataNodeLocation dls : block.locations){
-				int TTid = DSForJT.TTLocToTTid.get(dls);
-				if(DSForJT.TTtoJobs.containsKey(TTid))
-					DSForJT.TTtoJobs.get(TTid).add(tempJobTask);
-				else{
-					ArrayList<JobIdTaskId> tempJobList = new ArrayList<JobIdTaskId>();
-					tempJobList.add(tempJobTask);
-					DSForJT.TTtoJobs.put(TTid, tempJobList);
-				}
-				if(DSForJT.jobstoTT.containsKey(tempJobTask)){
-					DSForJT.jobstoTT.get(tempJobTask).add(TTid);
-				}
-				else{
-					ArrayList<Integer> tempTTid = new ArrayList<Integer>();
-					tempTTid.add(TTid);
-					DSForJT.jobstoTT.put(tempJobTask, tempTTid);
-				}
-			}
-		}
-		
-		//startJob(jsResponse.jobId);
+		DataStructuresForJobTracker.jobIdtoTaskTracker.put(jsResponse.jobId, blockLocations);
+		startJob(jsResponse.jobId);
 		return jsResponse.toProto();
 	}
 
@@ -159,8 +123,10 @@ public class JobTracker implements IJobTracker{
 	/* JobStatusResponse getJobStatus(JobStatusRequest) */
 	public byte[] getJobStatus(byte[] jobStatusRequest) {
 		// TODO Auto-generated method stub
-		//Request from JobClient 
-		return null;
+		JobStatusRequest jobStateRequest = new JobStatusRequest(jobStatusRequest);
+		JobStatusResponse jobStateResponse = new JobStatusResponse();
+		//TODO maintain the data about the job in HearBeat check the data and send the response accordingly
+		return jobStateResponse.toProto();
 	}
 
 	@Override
@@ -170,8 +136,11 @@ public class JobTracker implements IJobTracker{
 //		 TODO : When a TT heartbeats, it uses the number of map/reduce slots available to
 //		decide if it can schedule tasks on the TT. The HB response contains information required to execute the map/reduce tasks.
 //		The heartbeat from TT also contains information about the status of the tasks
-		MapReducePkg.MRRequestResponse.HeartBeatRequest taskTrackerHeatBeat = new MapReducePkg.MRRequestResponse.HeartBeatRequest(heartBeatRequest);
-				
+		HeartBeatRequest taskTrackerRequest = new HeartBeatRequest(heartBeatRequest);
+		MapTaskInfo mapTaskInfo = new MapTaskInfo();
+		ReducerTaskInfo reduceTaskInfo = new ReducerTaskInfo();
+		
+		//TODO HashMap<jobID,HashMap<TaskId,BlockLocation>> schedule the task if not completed and already not scheduled
 		return null;
 	}
 	
@@ -179,7 +148,7 @@ public class JobTracker implements IJobTracker{
 		//TODO conf file get locations of NameNode and other details
 		try {
 			//System.setProperty( "java.rmi.server.hostname", AllDataStructures.nameNodeIP ) ;
-			Registry reg = LocateRegistry.createRegistry(DSForJT.JobTrackerPort);
+			Registry reg = LocateRegistry.createRegistry(DataStructuresForJobTracker.JobTrackerPort);
 			JobTracker obj = new JobTracker();
 			reg.rebind("JobTracker", obj);
 			System.out.println("JobTracker server is running");
@@ -191,24 +160,14 @@ public class JobTracker implements IJobTracker{
 
 }
 
-class MapReduceSlots{
-	int mapSlots,reduceSlots;
-}
-class JobIdTaskId{
-	int jobId,taskId;
-}
-class DSForJT{
+class DataStructuresForJobTracker{
 	public static int jobId=0,taskId=0;
 	public static int JobTrackerPort = 2000;
 //	JonID to TaskTracker Map
 	public static HashMap<Integer,ArrayList<BlockLocations> > jobIdtoTaskTracker = new HashMap<Integer,ArrayList<BlockLocations> >();
 	//TaskTracker Id to Number of slots HashMap<TaskTrackerId,NumberOfSlots>
-	//public static HashMap<Integer, MapReduceSlots> taskTrackerSlots = new HashMap<Integer,MapReduceSlots>();
-
-	public static HashMap<Integer,DataNodeLocation> TTidToTTLoc = new HashMap<Integer,DataNodeLocation>();
-	public static HashMap<DataNodeLocation,Integer> TTLocToTTid = new HashMap<DataNodeLocation,Integer>();
-	
-	public static HashMap<Integer, ArrayList<JobIdTaskId>> TTtoJobs = new HashMap<Integer,ArrayList<JobIdTaskId>>();
-	public static HashMap<JobIdTaskId, ArrayList<Integer>> jobstoTT = new HashMap<JobIdTaskId,ArrayList<Integer>>();
-	public static HashMap<Integer, JobIdTaskId> jobIdtoTask = new HashMap<>();
+	public static HashMap<Integer, Integer> taskTrackerSlots = new HashMap<Integer,Integer>();
+// TODO should be filled in Config file
+	public static HashMap<Integer,DataNodeLocation> idToTaskTracker = new HashMap<Integer,DataNodeLocation>();
+	public static HashMap<DataNodeLocation,Integer> taskTrackerToID = new HashMap<DataNodeLocation,Integer>();
 }
