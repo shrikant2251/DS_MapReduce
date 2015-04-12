@@ -31,7 +31,13 @@ public class JobClient {
 			while(true){
 				//TODO keep delay for 3 sec
 				try {
-					in.getJobStatus(jobSubmitResponseData);
+					byte []jobStatusResponseData = in.getJobStatus(jobSubmitResponseData);
+					JobStatusResponse jsResponse = new JobStatusResponse(jobStatusResponseData);
+					if(jsResponse.jobDone)
+							break;
+					else{
+						//TODO print the Job Completion status 
+					}
 				}
 				catch(Exception e){
 					e.printStackTrace();
@@ -41,7 +47,7 @@ public class JobClient {
 				//TODO Termination condition
 			}
 		}
-	//	return 1 ;// success
+		return 1 ;// success
 	}
 	public static void main(String []args){
 		if(args.length!=5){
