@@ -407,8 +407,8 @@ public interface MRRequestResponse {
 	}
 	public class HeartBeatResponse{
 		int status;
-		ArrayList<MapTaskInfo> mapTasks;
-		ArrayList<ReducerTaskInfo> reduceTasks;
+		public ArrayList<MapTaskInfo> mapTasks;
+		public ArrayList<ReducerTaskInfo> reduceTasks;
 		public HeartBeatResponse(){
 			
 		}
