@@ -105,6 +105,7 @@ public class NameNode extends UnicastRemoteObject implements INameNode {
 			} else {/* File does not exist */
 				openFileResponse.status = -1; // file does not exist error in
 												// opening file
+				System.out.println("NameNode :: File " + openFileRequest.fileName + " Does not exists");
 				openFileResponse.handle = -1;
 				//openFileResponse.blockNums = new ArrayList<Integer>();
 				//openFileResponse.blockNums.add(-1);
@@ -165,14 +166,17 @@ public class NameNode extends UnicastRemoteObject implements INameNode {
 		ArrayList<RequestResponse.BlockLocations> locationList = new ArrayList<RequestResponse.BlockLocations>();
 		
 		// iterate through each block number and add DataNodeLocation to list
+		System.out.println("NameNode getBlockLocations Method request for total number of :" + blockLocationRequest.blockNums.size() +" blocks");
 		for (int i = 0; i < blockLocationRequest.blockNums.size(); i++) {
 			int blknm = blockLocationRequest.blockNums.get(i);
 			//System.out.println("NameNode getBlockLocation Method block no " + blknm);
 			RequestResponse.BlockLocations blockLocation;
 
 			// check block number is available in hashmap or not
-			if (AllDataStructures.blocNumToDataNodeLoc.containsKey(blknm))
+			if (AllDataStructures.blocNumToDataNodeLoc.containsKey(blknm)){
 				blockLocation = new RequestResponse.BlockLocations(blknm,AllDataStructures.blocNumToDataNodeLoc.get(blknm));
+				System.out.println("NameNode in getblockLocations block:" + blknm + " No Of dataNodelocations containing this block:" + AllDataStructures.blocNumToDataNodeLoc.get(blknm).size() );
+			}
 			else {
 				status = -1;
 				blockLocation = new RequestResponse.BlockLocations(blknm,new ArrayList<DataNodeLocation>());
@@ -234,6 +238,7 @@ public class NameNode extends UnicastRemoteObject implements INameNode {
 			}
 			blockList.add(AllDataStructures.blockNumber);
 			AllDataStructures.fileNameToBlockNum.put(file, blockList);
+			System.out.println("NameNode AssignBlockLocation Datanodes assigned:" + node.size());
 			AllDataStructures.blocNumToDataNodeLoc.put(AllDataStructures.blockNumber,node);
 			try {
 				FileWriter fw = new FileWriter(file, true);
@@ -281,7 +286,7 @@ public class NameNode extends UnicastRemoteObject implements INameNode {
 		BlockReportRequest blockReportRequest = new BlockReportRequest(input);
 		BlockReportResponse blockReportResponse = new BlockReportResponse();
 		
-		System.out.println("NameNode :: block report receive from DataNode ID " + blockReportRequest.id);
+	//	System.out.println("NameNode :: block report receive from DataNode ID " + blockReportRequest.id);
 	//	System.out.println("NameNode blockReport id = " + blockReportRequest.id);
 		if(!AllDataStructures.idToDataNode.containsKey(blockReportRequest.id)){
 			AllDataStructures.idToDataNode.put(blockReportRequest.id, blockReportRequest.location);
@@ -292,10 +297,20 @@ public class NameNode extends UnicastRemoteObject implements INameNode {
 				dataNode = new ArrayList<DataNodeLocation>();
 				dataNode.add(blockReportRequest.location);
 				AllDataStructures.blocNumToDataNodeLoc.put(block, dataNode);
+				System.out.println("NameNode HeartBeat BlockNumber :" + block + " Does not present added block and dataNodeLocation");
 			} else {
 				dataNode = AllDataStructures.blocNumToDataNodeLoc.get(block);
-				if (!dataNode.contains(blockReportRequest.location)) {
+				boolean present = false;
+				for(DataNodeLocation d:dataNode){
+					if(blockReportRequest.location.ip == d.ip || blockReportRequest.location.port == d.port){
+						present = true;
+						break;
+					}
+				}
+				if (!present) {
+				//if(dataNode.contains(blockReportRequest.location)){
 					dataNode.add(blockReportRequest.location);
+					System.out.println("NameNode HeartBeat BlockNumber :" + block + " present DataNode Does not present adding DataNode");
 				}
 			}
 			blockReportResponse.status.add(1);
@@ -309,7 +324,7 @@ public class NameNode extends UnicastRemoteObject implements INameNode {
 		HeartBeatRequest heartBeatRequest = new HeartBeatRequest(input);
 		HeartBeatResponse hearBeatResponse = new HeartBeatResponse();
 		
-		System.out.println("NameNode :: Heartbeat received from DataNode ID :: " + heartBeatRequest.id);
+//		System.out.println("NameNode :: Heartbeat received from DataNode ID :: " + heartBeatRequest.id);
 
 		if (AllDataStructures.idToDataNode.containsKey(heartBeatRequest.id)) {
 	//		Date date = new Date();

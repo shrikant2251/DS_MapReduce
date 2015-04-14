@@ -87,11 +87,21 @@ public interface RequestResponse {
 				e.printStackTrace();
 			}
 		}
-		public boolean equals(DataNodeLocation node){
+
+		@Override
+		public int hashCode() {
+			// TODO Auto-generated method stub
+			return 1;
+		}
+		@Override
+		public boolean equals(Object obj) {
+			System.out.println("DataNode equals Method");
+			DataNodeLocation node = (DataNodeLocation)obj;
 			if(this.ip == node.ip && this.port == node.port)
 			return true;
 			else return false;
 		}
+
 		public Hdfs.DataNodeLocation.Builder toProtoObject() {
 			Hdfs.DataNodeLocation.Builder locationBuilder = Hdfs.DataNodeLocation.newBuilder();
 			locationBuilder.setIp(ip);

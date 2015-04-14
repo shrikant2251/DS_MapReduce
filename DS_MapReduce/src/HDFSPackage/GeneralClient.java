@@ -1,10 +1,12 @@
 package HDFSPackage;
 import com.google.protobuf.*;
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.net.Inet4Address;
@@ -16,11 +18,20 @@ import java.rmi.registry.Registry;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.concurrent.ExecutionException;
 
 import HDFSPackage.RequestResponse.*;
 public class GeneralClient {
 	public static String nameNodeIP;
 	public static int nameNodePort,blockSize;
+	public GeneralClient(String ConfFile){
+		try{
+			config(ConfFile);
+		}
+		catch(Exception e){
+			e.printStackTrace();
+		}
+	}
 	public static void config(String filePath) throws FileNotFoundException, IOException
 	{
 		File file= new File(filePath);
@@ -103,7 +114,7 @@ public class GeneralClient {
 	}
 
 	// read file
-	public int read(String fileName) {
+	public int read(String fileName,String localFile) {
 
 		int status = 1;
 
@@ -213,6 +224,14 @@ public class GeneralClient {
 		if(status == 1)
 		{
 			System.out.println("Data Read Successful \n Content Of data is :: \n" + buffer.toString());
+			try{
+				BufferedWriter writer = new BufferedWriter(new FileWriter(localFile));
+				writer.write(buffer.toString());
+				writer.close();
+			}
+			catch(Exception e){
+				e.printStackTrace();
+			}
 		}
 		
 		// close file
@@ -272,6 +291,7 @@ public class GeneralClient {
 			try {
 					sourceFile = new RandomAccessFile(sourceFilePath, "r");
 					dataSize=sourceFile.length();
+					System.out.println("GenClient Method write DataSize of File to write :" + dataSize + " BlockSize:" + blockSize);
 					numOfBlocksReq = (int) Math.ceil(dataSize / blockSize);
 				
 			} catch (Exception e1) {
@@ -281,6 +301,7 @@ public class GeneralClient {
 				e1.printStackTrace();
 				return status;
 			}
+			System.out.println("GenClient Method write Content to write:");
 			/****************************************************************************************/
 			for (i = 0; i < numOfBlocksReq; i++) {
 				try {
@@ -303,16 +324,19 @@ public class GeneralClient {
 						System.out.println(d.ip + " " + d.port + " " + d.tstamp);
 					}
 					*/
-					int endOffset;
+					int endOffset,readData;
 					endOffset=offset+blockSize;
-					if(endOffset>dataSize)
+					if(endOffset>dataSize){
 						endOffset=(int) dataSize;
-					
+						readData = (int)dataSize - offset;
+					}
+					else readData = blockSize;
 					/*************************************************************************************************/
-					byte[] buffer = new byte[endOffset];
+					byte[] buffer = new byte[readData];
 					try {
 						sourceFile.seek(offset);
 						sourceFile.read(buffer);
+						System.out.println("GenClient Block no :" + i + " Data : "+new String(buffer));
 					} catch (IOException e1) {
 						// TODO Auto-generated catch block
 						status = -1;
@@ -388,21 +412,21 @@ public class GeneralClient {
 			System.out.println("Usage java <GeneralClient> <config File Path>");
 			System.exit(-1);
 		}
-		try {
+		/*try {
 			config(args[0]);
 		} catch (IOException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
-		}
+		}*/
 			
 		try {
-			GeneralClient client = new GeneralClient();
-			String sourceFilePath="/home/shrikant/trim_path.py";
+			GeneralClient client = new GeneralClient(args[0]);
+			String sourceFilePath="/home/shrikant/temp";
 			//String data = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZKedar";
 			//int st = client.write("tmp2.txt",data.getBytes() );
-			int st = client.write("tmp1.txt",sourceFilePath);
-			int st1 = client.read("tmp1.txt");
-			System.out.println("Status of read = " + st1  + "status of write = " + st);
+			int st = client.write("tempFile.txt",sourceFilePath);
+			int st1 = client.read("tempFile.txt","/home/shrikant/blockDirectory/tempRead");
+		//	System.out.println("Status of read = " + st1  + "status of write = " + st);
 			//client.list();
 		} catch (Exception e) {
 			e.printStackTrace();

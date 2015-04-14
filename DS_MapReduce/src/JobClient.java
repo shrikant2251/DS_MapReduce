@@ -1,12 +1,14 @@
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
+import java.util.concurrent.ExecutionException;
 
+import MapReducePkg.MRRequestResponse.JobStatusRequest;
 import MapReducePkg.MRRequestResponse.*;
 
 
 public class JobClient {
-	public static String jobTrackerIP;
-	public static int jobTrackerPort;
+	public static String jobTrackerIP="127.0.0.1";
+	public static int jobTrackerPort=2000;
 	int createJob(String mapName,String reduceName,String inFile,String outFile,int numOfReducers){
 		IJobTracker in = null;
 		JobSubmitResponse jobSubmitResponse = null;
@@ -17,6 +19,7 @@ public class JobClient {
 			JobSubmitRequest jobSubmitRequest = new JobSubmitRequest(mapName,reduceName,inFile,outFile,numOfReducers);
 			jobSubmitResponseData = in.jobSubmit(jobSubmitRequest.toProto());
 			jobSubmitResponse = new JobSubmitResponse(jobSubmitResponseData);
+			System.out.println("JobClient CreateJob returned JobId :" + jobSubmitResponse.jobId);
 		} 
 		catch (Exception e) {
 			e.printStackTrace();
@@ -30,8 +33,16 @@ public class JobClient {
 		else{
 			while(true){
 				//TODO keep delay for 3 sec
+				try{
+					Thread.sleep(1000);
+				}
+				catch(Exception e ){
+					e.printStackTrace();
+				}
+				System.out.println("Get Status from JobTracker");
 				try {
-					byte []jobStatusResponseData = in.getJobStatus(jobSubmitResponseData);
+					JobStatusRequest jsStatusRequest = new JobStatusRequest(jobSubmitResponse.jobId);
+					byte []jobStatusResponseData = in.getJobStatus(jsStatusRequest.toProto());
 					JobStatusResponse jsResponse = new JobStatusResponse(jobStatusResponseData);
 					if(jsResponse.jobDone){
 						System.out.println("JobId : " + jobSubmitResponse.jobId + " 100% Completed !!");
@@ -40,12 +51,13 @@ public class JobClient {
 						
 					else{
 						//TODO print the Job Completion status 
-						if(jsResponse.numMapTasksStarted < jsResponse.totalMapTasks){
-							System.out.println("JobId : " + jobSubmitResponse.jobId +" -->" + (jsResponse.numMapTasksStarted / jsResponse.totalMapTasks) + "% of MapTask Started");
+						System.out.println("Num of Map started : " + jsResponse.numMapTasksStarted + "total Map :" + jsResponse.totalMapTasks);;
+						if(jsResponse.numMapTasksStarted <= jsResponse.totalMapTasks){
+							System.out.println("JobId : " + jobSubmitResponse.jobId +" -->" + (jsResponse.numMapTasksStarted / jsResponse.totalMapTasks)*100 + "% of MapTask Started");
 						}
-
-						if(jsResponse.numReduceTasksStarted < jsResponse.totalReduceTasks){
-							System.out.println("JobId : " + jobSubmitResponse.jobId +" -->" + (jsResponse.numReduceTasksStarted / jsResponse.totalReduceTasks) + "% of ReduceTask Started");
+						
+						if(jsResponse.numReduceTasksStarted <= jsResponse.totalReduceTasks){
+							System.out.println("JobId : " + jobSubmitResponse.jobId +" -->" + (jsResponse.numReduceTasksStarted / jsResponse.totalReduceTasks)*100 + "% of ReduceTask Started");
 						}
 
 					}

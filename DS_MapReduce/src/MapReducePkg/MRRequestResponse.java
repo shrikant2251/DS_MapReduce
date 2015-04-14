@@ -285,7 +285,11 @@ public interface MRRequestResponse {
 	public class MapTaskInfo{
 		public int jobId,taskId,inputBlocks;
 		public String mapName;
-		public boolean equals(MapTaskInfo mapTask){
+		public int hashCode(){
+			return 1;
+		}
+		public boolean equals(Object obj){
+			MapTaskInfo mapTask = (MapTaskInfo)obj;
 			if(this.jobId == mapTask.jobId && this.taskId == mapTask.taskId)
 			return true;
 			else return false;

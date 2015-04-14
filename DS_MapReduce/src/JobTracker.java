@@ -1,21 +1,35 @@
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.net.Inet4Address;
+import java.net.UnknownHostException;
+import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
+import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.TreeSet;
 
+import HDFSPackage.DataNode;
 import HDFSPackage.INameNode;
+import HDFSPackage.IpConversion;
 import HDFSPackage.RequestResponse.*;
 import MapReducePkg.MRRequestResponse.HeartBeatResponse;
-import MapReducePkg.MRRequestResponse.ReducerTaskInfo;
 import MapReducePkg.MRRequestResponse.*;
 
-public class JobTracker implements IJobTracker{
+public class JobTracker extends UnicastRemoteObject implements IJobTracker{
 
 
-	public static String nameNodeIP;
-	public static int nameNodePort,blockSize;
+	protected JobTracker(String confFile) throws RemoteException {
+		super();
+		conf(confFile);
+		// TODO Auto-generated constructor stub
+	}
+
+	public static String nameNodeIP = "127.0.0.1";
+	public static int nameNodePort=1088;//blockSize=10;
 	/****
 	 * Method to open File from HDFS in read or write Mode
 	 */
@@ -28,11 +42,13 @@ public class JobTracker implements IJobTracker{
 			INameNode in = (INameNode) myreg.lookup("NameNode");
 			OpenFileRequest openFileRequest = new OpenFileRequest(fileName,forRead);
 			response = in.openFile(openFileRequest.toProto());
+			System.out.println("In JobTracker Open method Connection to NameNode is successful OpenFile success");
 		} catch (Exception e) {
 			status = -1;
 			e.printStackTrace();
 		}
 		if (status == -1) {
+			System.out.println("In JobTracker Open method OpenFile Failed");
 			OpenFileRespose openFileResponse = new OpenFileRespose(-1, -1, new ArrayList<Integer>());
 			response = openFileResponse.toProto();
 		}
@@ -49,6 +65,9 @@ public class JobTracker implements IJobTracker{
 		//IDataNode dataNode = null;
 		//IpConversion ipObj = new IpConversion();
 	//	int RMIStatus = 1;
+		for(int blk : blockNumbers){
+			System.out.println("JobTracker getBlockLocation :" + blk);
+		}
 		try {
 			Registry myreg = LocateRegistry.getRegistry(nameNodeIP,nameNodePort);
 			in = (INameNode) myreg.lookup("NameNode");
@@ -80,6 +99,7 @@ public class JobTracker implements IJobTracker{
 			System.out.println("JobTracker Method getBlockLocations Failure due to BlockLocationResponse failed");
 			return null;
 		}
+		System.out.println("JobTracker getBlockLocation Method number of Blocks : " + blockLocationResponse.blockLocations.size());
 		return blockLocationResponse.blockLocations;
 	}
 	@Override
@@ -90,6 +110,7 @@ public class JobTracker implements IJobTracker{
 		
 		// opens the file in HDFS in Read Mode
 		byte[] openResponse;
+		System.out.println("Sending Request to NameNode for Open File " + jsRequest.inputFile );
 		openResponse = open(jsRequest.inputFile, true);
 		OpenFileRespose openFileResponse = new OpenFileRespose(openResponse);
 
@@ -107,7 +128,7 @@ public class JobTracker implements IJobTracker{
 		jsResponse.status = 1;
 		jsResponse.jobId = DSForJT.jobId++;
 		//TODO Keep HashMap of JobId to TaskTrackers or blockLocations used later in getJobStatus
-		DSForJT.jobIdtoTaskTracker.put(jsResponse.jobId, blockLocations);
+		//DSForJT.jobIdtoTaskTracker.put(jsResponse.jobId, blockLocations);
 		JobResponseData tempRed = new JobResponseData();
 		tempRed.reduceName = jsRequest.reduceName;
 		double d1 = blockLocations.size();
@@ -115,17 +136,25 @@ public class JobTracker implements IJobTracker{
 		tempRed.mapFileForEachReducer = (int)(d1/ d2);
 		tempRed.totalMap = blockLocations.size();
 		tempRed.totalReduce = jsRequest.numReduceTasks;
+		System.out.println("Jobtracker Jobsubmit total Map : "  + tempRed.totalMap +" Total reduce Tasks:" + tempRed.totalReduce);
 		tempRed.mapStarted = 0;
 		tempRed.reduceStarted = 0;
 		DSForJT.jobIdtoJobresponse.put(jsResponse.jobId, tempRed);
 		for(BlockLocations block : blockLocations){
+			System.out.println("Jobtracker jobSumit Method for loop block num : " + block.blockNumber);
 			MapTaskInfo tempMapTask = new MapTaskInfo();
 			tempMapTask.jobId = jsResponse.jobId;
 			tempMapTask.taskId = DSForJT.taskId++;
 			tempMapTask.mapName = jsRequest.mapName;
 			tempMapTask.inputBlocks = block.blockNumber;
+			//System.out.println("JobTracker jobSubmit method DataNodeLocation list size :" + block.locations.size());
+		/*	for(DataNodeLocation dls : block.locations){
+				System.out.println("JobTracker JobSubmit Method for loop DataNodeLocation ip:" + dls.ip + "  port:" + dls.port );
+			}
+			*/
 			for(DataNodeLocation dls : block.locations){
 				int TTid = DSForJT.TTLocToTTid.get(dls);
+		//		System.out.println("JobTracker JobSumit ForLoop for DataNodeLocation " + TTid);
 				if(DSForJT.TTtoJobs.containsKey(TTid))
 					DSForJT.TTtoJobs.get(TTid).add(tempMapTask);
 				else{
@@ -163,12 +192,14 @@ public class JobTracker implements IJobTracker{
 		JobStatusRequest jsRequest = new JobStatusRequest(jobStatusRequest);
 		JobStatusResponse jsResponse = new JobStatusResponse();
 		int jobId = jsRequest.jobId;
+		System.out.println("Jobtracker Jobsubmit method jobId:" + jobId);
 		if(DSForJT.jobIdtoJobresponse.containsKey(jobId)){
 			if(DSForJT.reduceCompletedJobs.contains(jobId)){
 				jsResponse.jobDone = true;
 			}
-			else
+			else{
 				jsResponse.jobDone = false;
+			}
 			jsResponse.numMapTasksStarted = DSForJT.jobIdtoJobresponse.get(jobId).mapStarted;
 			jsResponse.numReduceTasksStarted = DSForJT.jobIdtoJobresponse.get(jobId).reduceStarted;
 			jsResponse.totalMapTasks = DSForJT.jobIdtoJobresponse.get(jobId).totalMap;
@@ -189,6 +220,8 @@ public class JobTracker implements IJobTracker{
 		/*****************************************************************************/
 		//Assign the MapTasks if Free slots for Map on current Task Tracker
 		ArrayList<MapTaskInfo> mapTaskInfo = new ArrayList<MapTaskInfo>();
+	//	System.out.println("Jobtracker HeartBeat method HearBeat recieved from TaskTracker Id:" + tId);
+	//	System.out.println("Jobtracker HeartBeat method mapSlots free : " + taskTrackerHeatBeat.numMapSlotsFree);
 		while(taskTrackerHeatBeat.numMapSlotsFree > 0 && DSForJT.TTtoJobs.containsKey(tId)){
 			MapTaskInfo mpTask = new MapTaskInfo();
 			mpTask = DSForJT.TTtoJobs.get(tId).get(0);
@@ -210,17 +243,19 @@ public class JobTracker implements IJobTracker{
 		//ArrayList<MapTaskStatus> mpStatus = new ArrayList<MapTaskStatus>();
 		for(MapTaskStatus mp : taskTrackerHeatBeat.mapStatus){
 			if(mp.taskCompleted){
+				System.out.println("Jobtracker HeartBeat maptask Completed jobId: " + mp.jobId +"task id:" + mp.taskId);
 				MapTaskInfo removeMap = new MapTaskInfo();
 				removeMap.jobId = mp.jobId;
 				removeMap.taskId = mp.taskId;
 				if(DSForJT.jobIdtoTask.containsKey(mp.jobId)){
 					DSForJT.jobIdtoTask.remove(removeMap);
 					if(DSForJT.jobIdtoTask.get(mp.jobId).size()==0){
+						System.out.println("Jobtracker HeartBeat All map tasks completed *************");
 						DSForJT.mapCompletedJobs.add(mp.jobId);
 						DSForJT.jobIdtoTask.remove(mp.jobId);
 					}
 				}
-				String mapFile = new String("job_"+mp.jobId + "_map" + mp.taskId);
+				String mapFile = new String("Job_"+mp.jobId + "_map_" + mp.taskId);
 							
 				if(DSForJT.jobIdtoReduceTask.containsKey(mp.jobId) ){
 					int last = DSForJT.jobIdtoReduceTask.get(mp.jobId).size()-1;
@@ -254,6 +289,7 @@ public class JobTracker implements IJobTracker{
 		/*****************************************************************************/
 		//Start the Reduce tasks if MapTasks are completed
 		ArrayList<ReducerTaskInfo> reducerTaskInfo = new ArrayList<ReducerTaskInfo>();
+	//	System.out.println("Jobtracker HeartBeat method ReduceSlots free : " + taskTrackerHeatBeat.numReduceSlotsFree);
 		while(taskTrackerHeatBeat.numReduceSlotsFree>0 && DSForJT.mapCompletedJobs.size()>0){
 				int jobId = DSForJT.mapCompletedJobs.first();
 				while(taskTrackerHeatBeat.numReduceSlotsFree>0 && DSForJT.jobIdtoReduceTask.containsKey(jobId)){
@@ -271,15 +307,93 @@ public class JobTracker implements IJobTracker{
 				}
 		}
 		HeartBeatResponse hearBeatResponse = new HeartBeatResponse(1,mapTaskInfo,reducerTaskInfo);
+		//System.out.println("Heartbeat Received");
 		return hearBeatResponse.toProto();
 	}
 	
-	public static void main(String []args){
+	void conf(String ConfFile){
+		//NameNode IP,Port
+		//TaskTracker ID,IP,Port(same as DataNode(Update TTidToTTLoc and TTLocToTTid)
+		//JobTracker Port
+		File conf = new File(ConfFile);
+		if(!conf.exists()){
+			System.out.println("JobTracker Conf File does not exists please check the Path");
+			System.exit(0);
+		}
+		try{
+			BufferedReader reader = new BufferedReader(new FileReader(conf));
+			String line=null;
+			while((line=reader.readLine()) != null){
+				String []data = line.split("="); 
+				switch(data[0]){
+					case "NameNodeIp":
+						nameNodeIP = data[1];
+						break;
+					case "NameNodePort":
+						nameNodePort = Integer.parseInt(data[1]);
+						break;
+					case "TaskTrackerId":
+						int Tid = Integer.parseInt(data[1]);
+						IpConversion ipconv = new IpConversion();
+						int ip,port;
+						line = reader.readLine();
+						data = line.split("=");
+						ip = ipconv.packIP(Inet4Address.getByName(data[1]).getAddress());
+						line = reader.readLine();
+						data = line.split("=");
+						port = Integer.parseInt(data[1]);
+						DataNodeLocation dl = new DataNodeLocation(ip,port);
+						if(!DSForJT.TTidToTTLoc.containsKey(Tid))
+							DSForJT.TTidToTTLoc.put(Tid, dl);
+						else{
+							System.out.println("JobTracker Conf Method TaskTracker Id already present");
+						}
+						if(!DSForJT.TTLocToTTid.containsKey(dl))
+							DSForJT.TTLocToTTid.put(dl, Tid);
+				
+						else{
+							System.out.println("JobTracker Conf Method TaskTracker IP,port Already present");
+						}
+						break;
+					case "JobTrackerIp":
+						DSForJT.JobTrackerIp = data[1];
+						break;
+					case "JobTrackerPort":
+						DSForJT.JobTrackerPort = Integer.parseInt(data[1]);
+						break;
+				}
+			}
+			reader.close();
+		}
+		catch(Exception e){
+			e.printStackTrace();
+		}
+		
+	}
+	public static void main(String []args) throws UnknownHostException{
 		//TODO conf file get locations of NameNode and other details
+		if(args.length != 1){
+			System.out.println("Invalid Usage");
+			System.out.println("Usage java <JobTracker> <configFile Path>");
+			System.exit(0);
+		}
+	
+		System.out.println("Get the Locations of TaskTrackers using Conf File");
+		/*IpConversion ipconv = new IpConversion();
+		int ip,port=5000;
+		String tmp = "127.0.0.1";
+		ip = ipconv.packIP(Inet4Address.getByName(tmp).getAddress());
+		DataNodeLocation dl = new DataNodeLocation(ip,port);
+		DSForJT.TTidToTTLoc.put(10, dl);
+		DSForJT.TTLocToTTid.put(dl, 10);
+		DataNodeLocation dls = new DataNodeLocation(ip,port); 
+		System.out.println(ip + "  " + port);
+		int TTid = DSForJT.TTLocToTTid.get(dls);*/
 		try {
 			//System.setProperty( "java.rmi.server.hostname", AllDataStructures.nameNodeIP ) ;
 			Registry reg = LocateRegistry.createRegistry(DSForJT.JobTrackerPort);
-			JobTracker obj = new JobTracker();
+			JobTracker obj = new JobTracker(args[0]);
+			//obj.();
 			reg.rebind("JobTracker", obj);
 			System.out.println("JobTracker server is running");
 		} catch (Exception e) {
@@ -309,8 +423,9 @@ class JobResponseData{
 class DSForJT{
 	public static int jobId=0,taskId=0;
 	public static int JobTrackerPort = 2000;
+	public static String JobTrackerIp = "127.0.0.1";
 //	JonID to TaskTracker Map
-	public static HashMap<Integer,ArrayList<BlockLocations> > jobIdtoTaskTracker = new HashMap<Integer,ArrayList<BlockLocations> >();
+	//public static HashMap<Integer,ArrayList<BlockLocations> > jobIdtoTaskTracker = new HashMap<Integer,ArrayList<BlockLocations> >();
 	//TaskTracker Id to Number of slots HashMap<TaskTrackerId,NumberOfSlots>
 	//public static HashMap<Integer, MapReduceSlots> taskTrackerSlots = new HashMap<Integer,MapReduceSlots>();
 

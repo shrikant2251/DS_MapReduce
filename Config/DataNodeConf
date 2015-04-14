@@ -1,0 +1,6 @@
+dataNodeID=10
+dataNodeIP=127.0.0.1
+dataNodePort=5000
+nameNodeIP=127.0.0.1
+nameNodePort=1088
+heartBeatRate=5000
