@@ -36,7 +36,7 @@ public class TaskTracker extends TimerTask{
 	static ConcurrentHashMap<MapTaskInfo,Future<?>> mapTracker ;
 	static ConcurrentHashMap<ReducerTaskInfo,Future<?>> reduceTracker;
 	static ExecutorService mapThreadPool,reduceThreadPool;
-	
+	static String tmpMapDir,tmpReduceDir,blockDir;
 	
 	// TODO When the TT gets a map request, it places the request in an internal
 //	queue. The consumers of this queue are a fixed number of threads
@@ -65,6 +65,9 @@ public class TaskTracker extends TimerTask{
 		noOfReduceThreadsRemain =noOfReduceThreads;
 		heartBeatRate = 3000;
 		genClientConf = "/home/shrikant/git/DS_MapReduce/Config/GeneralClientConf";
+		tmpMapDir = "/home/shrikant/blockDirectory/MapTmp/";
+		tmpReduceDir = "/home/shrikant/blockDirectory/ReduceTmp/";
+		blockDir = "/home/shrikant/blockDirectory/";
 	}
 	
 	byte [] generateHeartBeat()
@@ -136,9 +139,12 @@ public class TaskTracker extends TimerTask{
 			Future<?> future = mapThreadPool.submit(mapTask);
 			mapTracker.put(mti, future);
 		}
-		
+		System.out.println("AAAAAAAAAAAAA : TaskTracker HandleHeartBeat :" + reduceTasks.size());
 		for(ReducerTaskInfo rti : reduceTasks)
 		{
+			for(String m:rti.mapOutputFiles){
+				System.out.println("++++++++++++++++++++++++++++++++++++++++ TaskTrcker Handle heartBeat MapOutpufileName :" + m);
+			}
 			noOfReduceThreadsRemain--;
 			ReduceTask reduceTask = new ReduceTask(rti);
 			Future<?> future = reduceThreadPool.submit(reduceTask);
@@ -187,8 +193,9 @@ public class TaskTracker extends TimerTask{
 		int jobId,taskId;
 		String inputFile,mapTaskName,mapOutputFile;
 		int bolckNums;
-		String directoryName = "/home/shrikant/blockDirectory/";
-		String tmpDir = "/home/shrikant/blockDirectory/MapTmp/";
+		//TODO update the names
+		String directoryName = TaskTracker.blockDir;
+		String tmpDir = TaskTracker.tmpMapDir;
 		public MapTask(MapTaskInfo mapTaskInfo)
 		{
 			jobId = mapTaskInfo.jobId;
@@ -202,7 +209,7 @@ public class TaskTracker extends TimerTask{
 			try {
 				File dir = new File(tmpDir);
 				if (!dir.exists()) {
-					dir.mkdir();
+					dir.mkdirs();
 				}
 				System.out.println("TaskTracker MapTask Class run method mapName : " + mapTaskName);
 				System.out.println("Maptask run method Input File :" +directoryName + inputFile);
@@ -252,8 +259,8 @@ public class TaskTracker extends TimerTask{
 		public int jobId,taskId;
 		public String reducerName,outputFile;
 		ArrayList<String> mapOutputFiles;
-		String directoryName = "/home/shrikant/blockDirectory/";
-		String tmpDir = "/home/shrikant/blockDirectory/ReduceTmp/";
+		String directoryName = TaskTracker.blockDir;
+		String tmpDir = TaskTracker.tmpReduceDir;
 		public ReduceTask(ReducerTaskInfo reducerTaskInfo)
 		{
 			jobId = reducerTaskInfo.jobId;
@@ -274,38 +281,61 @@ public class TaskTracker extends TimerTask{
 				System.out.println("TaskTracker ReduceTask reduceName :" + reducerName);
 				//Method method = obj.getMethod("reduce", (Class<?>)null);
 				IReducer reduceObj = (IReducer)obj.newInstance();
-				outputFile=outputFile+"_"+Integer.toString(jobId)+"_"+Integer.toString(taskId);
-				BufferedWriter writer = new BufferedWriter(new FileWriter(directoryName+outputFile));
+				//outputFile=outputFile+"_Reduce_"+Integer.toString(jobId)+"_"+Integer.toString(taskId);
+				File tmp = new File(tmpDir);
+				if(!tmp.exists()){
+					tmp.mkdirs();
+				}
+				BufferedWriter writer = new BufferedWriter(new FileWriter(tmpDir+outputFile));
 				GeneralClient genClient = new GeneralClient(TaskTracker.genClientConf);
+				
+				String tmpFile = tmpDir+outputFile+"tmp";
+				int tmpCnt = 0;//mapOutputFiles.size();
+				System.out.println("%%%%%%%%%%%%%%%%%%%%%%%%%%  MapOutPutFile size :" + mapOutputFiles.size());
 				for (String inputFile : mapOutputFiles)
 				{
 						/*TODO HDFSPackage.GeneralClient generalClient = new HDFSPackage.GeneralClient();
 						generalClient.read(inputFile);*/
 					//TODO copyFromHDFS
-					genClient.read(directoryName+inputFile, tmpDir+outputFile+"tmp");
-					File tmp = new File(tmpDir);
-					if(!tmp.exists()){
-						tmp.mkdir();
-					}
-						BufferedReader buffer = new BufferedReader(new FileReader(directoryName+inputFile));
-						while(true)
+					System.out.println("TaskTracker ReduceTask run method " + outputFile);
+					
+					int status = genClient.read(inputFile, tmpFile+""+tmpCnt);
+					System.out.println("##################### TaskTracker ReduceTask reading file from HDFS :" + inputFile + " to Local File:" + tmpFile+""+tmpCnt);
+					System.out.println("############# Read Status :" + status);
+					if(status == -1) continue;
+					tmpCnt++;
+					BufferedReader buffer = new BufferedReader(new FileReader(tmpFile+""+(tmpCnt-1)+"GenClientRead"));
+					while(true)
+					{
+						String line = buffer.readLine();
+						if(line==null)
 						{
-							String line = buffer.readLine();
-							if(line==null)
-							{
-								buffer.close();
-								break;
-							}
-							String output = null;
-							output = reduceObj.reduce(line).toString();
-							if(output!=null)
-								writer.write(output+"\n");
+							buffer.close();
+							break;
 						}
-						writer.flush();
+						String output = null;
+						output = reduceObj.reduce(line);
+						System.out.println("********** Reduce Output ***********:" + output);
+						if(output!=null)
+							writer.write(output+"\n");
+					}
+					writer.flush();
 				}
 				writer.close();
 				//TODO copyToHDFS
-				genClient.write(outputFile, tmpDir + outputFile +"tmp");
+				/*
+				BufferedWriter rw = new BufferedWriter(new FileWriter(tmpFile));
+				rw.close();
+				for(int i=0;i<tmpCnt;i++){
+					BufferedReader rd = new BufferedReader(new FileReader(tmpFile+""+i));
+					String line =null;
+					while((line=rd.readLine())!=null){
+						rw.write(line);
+					}
+					rd.close();
+				}*/
+				System.out.println("!!!!!!!!!!!!!!!!!!!!!!! ReduceTask Local File :" + tmpDir + outputFile);
+				genClient.write(outputFile, tmpDir+outputFile);
 			} catch (Exception e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();

@@ -95,7 +95,7 @@ public interface RequestResponse {
 		}
 		@Override
 		public boolean equals(Object obj) {
-			System.out.println("DataNode equals Method");
+			//System.out.println("DataNode equals Method");
 			DataNodeLocation node = (DataNodeLocation)obj;
 			if(this.ip == node.ip && this.port == node.port)
 			return true;

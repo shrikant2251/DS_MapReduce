@@ -285,15 +285,22 @@ public interface MRRequestResponse {
 	public class MapTaskInfo{
 		public int jobId,taskId,inputBlocks;
 		public String mapName;
-		public int hashCode(){
+		
+		
+		@Override
+		public int hashCode() {
+			// TODO Auto-generated method stub
 			return 1;
 		}
-		public boolean equals(Object obj){
-			MapTaskInfo mapTask = (MapTaskInfo)obj;
-			if(this.jobId == mapTask.jobId && this.taskId == mapTask.taskId)
-			return true;
-			else return false;
+		
+		@Override
+		public boolean equals(Object obj) {
+				MapTaskInfo mapTask = (MapTaskInfo)obj;
+				if(this.jobId == mapTask.jobId && this.taskId == mapTask.taskId)
+				return true;
+				else return false;
 		}
+
 		public MapTaskInfo(){
 			
 		}
@@ -372,9 +379,10 @@ public interface MRRequestResponse {
 			taskBuilder.setTaskId(taskId);
 			taskBuilder.setReducerName(reducerName);
 			taskBuilder.setOutputFile(outputFile);
-			mapOutputFiles = new ArrayList<String>();
-			for(String  file : taskBuilder.getMapOutputFilesList()){
-				mapOutputFiles.add(file);
+			//mapOutputFiles = new ArrayList<String>();
+			for(String  file : mapOutputFiles){
+				taskBuilder.addMapOutputFiles(file);
+				System.out.println("XXXXXXXXXXXX Request Response set MapOutFile :" + file);
 			}
 			return taskBuilder;
 		}
@@ -401,10 +409,11 @@ public interface MRRequestResponse {
 			builder.setTaskId(taskId);
 			builder.setReducerName(reducerName);
 			builder.setOutputFile(outputFile);
-			int idx = 0;
+//			int idx = 0;
 			for(String file : mapOutputFiles){
-				builder.setMapOutputFiles(idx, file);
-				idx++;
+//				builder.setMapOutputFiles(idx, file);
+				builder.addMapOutputFiles(file);
+//				idx++;
 			}
 			return builder.build().toByteArray();
 		}
@@ -454,6 +463,7 @@ public interface MRRequestResponse {
 			}
 			
 			for(ReducerTaskInfo rTask : reduceTasks){
+				System.out.println("AAAAAAAAAAAAAA HearBeatResponse toProto");
 				builder.addReduceTasks(rTask.toProtoObject());
 			}
 			return builder.build().toByteArray(); 

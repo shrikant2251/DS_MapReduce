@@ -136,6 +136,7 @@ public class JobTracker extends UnicastRemoteObject implements IJobTracker{
 		tempRed.mapFileForEachReducer = (int)(d1/ d2);
 		tempRed.totalMap = blockLocations.size();
 		tempRed.totalReduce = jsRequest.numReduceTasks;
+		System.out.println("Jobtracker Jobsubmit Map Files for each Reducer :" + tempRed.mapFileForEachReducer);
 		System.out.println("Jobtracker Jobsubmit total Map : "  + tempRed.totalMap +" Total reduce Tasks:" + tempRed.totalReduce);
 		tempRed.mapStarted = 0;
 		tempRed.reduceStarted = 0;
@@ -172,12 +173,16 @@ public class JobTracker extends UnicastRemoteObject implements IJobTracker{
 				}
 			}
 			if(DSForJT.jobIdtoTask.containsKey(jsResponse.jobId)){
-				DSForJT.jobIdtoTask.get(jsResponse.jobId).add(tempMapTask);	
+				DSForJT.jobIdtoTask.get(jsResponse.jobId).add(tempMapTask);
+				System.out.println("Adding job and map task : job ID ->" + tempMapTask.jobId + " Task id :" + tempMapTask.taskId);
+				System.out.println("MapTask added : " +DSForJT.jobIdtoTask.get(jsResponse.jobId).size());
 			}
 			else{
 				HashSet<MapTaskInfo> tempJobList = new HashSet<MapTaskInfo>();
 				tempJobList.add(tempMapTask);
+				System.out.println("Adding job and map task : job ID ->" + tempMapTask.jobId + " Task id :" + tempMapTask.taskId);
 				DSForJT.jobIdtoTask.put(jsResponse.jobId, tempJobList);
+				System.out.println("MapTask added : " +DSForJT.jobIdtoTask.get(jsResponse.jobId).size());
 			}
 		}
 		
@@ -192,7 +197,7 @@ public class JobTracker extends UnicastRemoteObject implements IJobTracker{
 		JobStatusRequest jsRequest = new JobStatusRequest(jobStatusRequest);
 		JobStatusResponse jsResponse = new JobStatusResponse();
 		int jobId = jsRequest.jobId;
-		System.out.println("Jobtracker Jobsubmit method jobId:" + jobId);
+//		System.out.println("Jobtracker Jobsubmit method jobId:" + jobId);
 		if(DSForJT.jobIdtoJobresponse.containsKey(jobId)){
 			if(DSForJT.reduceCompletedJobs.contains(jobId)){
 				jsResponse.jobDone = true;
@@ -228,8 +233,10 @@ public class JobTracker extends UnicastRemoteObject implements IJobTracker{
 			mapTaskInfo.add(mpTask);
 			DSForJT.TTtoJobs.get(tId).remove(0);
 			ArrayList<Integer> tts = DSForJT.jobstoTT.get(mpTask);
+			System.out.println("JobTracker heartBeat jobs for TaskTracker :" + tId);
 			for( int tt : tts ){
 				DSForJT.TTtoJobs.get(tt).remove(mpTask);
+				System.out.println("Size :" + DSForJT.TTtoJobs.get(tt).size());
 			}
 			DSForJT.jobstoTT.remove(mpTask);
 			if(DSForJT.TTtoJobs.get(tId).size()==0){
@@ -248,7 +255,9 @@ public class JobTracker extends UnicastRemoteObject implements IJobTracker{
 				removeMap.jobId = mp.jobId;
 				removeMap.taskId = mp.taskId;
 				if(DSForJT.jobIdtoTask.containsKey(mp.jobId)){
-					DSForJT.jobIdtoTask.remove(removeMap);
+					System.out.println("##########Size of MapTasks :" + DSForJT.jobIdtoTask.get(mp.jobId).size());
+					DSForJT.jobIdtoTask.get(mp.jobId).remove(removeMap);
+					System.out.println("#############Size of MapTasks :" + DSForJT.jobIdtoTask.get(mp.jobId).size());
 					if(DSForJT.jobIdtoTask.get(mp.jobId).size()==0){
 						System.out.println("Jobtracker HeartBeat All map tasks completed *************");
 						DSForJT.mapCompletedJobs.add(mp.jobId);
@@ -292,6 +301,12 @@ public class JobTracker extends UnicastRemoteObject implements IJobTracker{
 	//	System.out.println("Jobtracker HeartBeat method ReduceSlots free : " + taskTrackerHeatBeat.numReduceSlotsFree);
 		while(taskTrackerHeatBeat.numReduceSlotsFree>0 && DSForJT.mapCompletedJobs.size()>0){
 				int jobId = DSForJT.mapCompletedJobs.first();
+				System.out.println("JobTracker HeartBeat method Sendig to ReduceTask JobId:" + jobId);
+				System.out.println("^^^^^ ^^^^^ Number of Reducetask for job :" + DSForJT.jobIdtoReduceTask.get(jobId).size());
+				for(ReducerTaskInfo r:DSForJT.jobIdtoReduceTask.get(jobId)){
+					for(String n:r.mapOutputFiles)
+					System.out.println("^^^^ map FileName" + n);
+				}
 				while(taskTrackerHeatBeat.numReduceSlotsFree>0 && DSForJT.jobIdtoReduceTask.containsKey(jobId)){
 					if(DSForJT.jobIdtoReduceTask.get(jobId).size()>0){
 							reducerTaskInfo.add(DSForJT.jobIdtoReduceTask.get(jobId).get(0));

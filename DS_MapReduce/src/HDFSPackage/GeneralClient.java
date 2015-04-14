@@ -117,7 +117,7 @@ public class GeneralClient {
 	public int read(String fileName,String localFile) {
 
 		int status = 1;
-
+		localFile = localFile+"GenClientRead";
 		// Open File for read
 		byte[] openResponse;
 		openResponse = open(fileName, true);
@@ -245,7 +245,6 @@ public class GeneralClient {
 	}
 
 	public int write(String fileName,/*byte [] data , */ String sourceFilePath) throws NotBoundException, UnknownHostException {
-		
 		int status = 1;
 		float dataSize = 0;
 		//float dataSize = data.length
