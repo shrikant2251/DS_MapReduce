@@ -1,24 +1,17 @@
 package HDFSPackage;
-import com.google.protobuf.*;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.RandomAccessFile;
-import java.net.Inet4Address;
-import java.net.UnknownHostException;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.concurrent.ExecutionException;
 
 import HDFSPackage.RequestResponse.*;
 public class GeneralClient {
@@ -244,7 +237,7 @@ public class GeneralClient {
 		else return 1;
 	}
 
-	public int write(String fileName,/*byte [] data , */ String sourceFilePath) throws NotBoundException, UnknownHostException {
+	public int write(String fileName,/*byte [] data , */ String sourceFilePath) throws NotBoundException, IOException {
 		int status = 1;
 		float dataSize = 0;
 		//float dataSize = data.length
@@ -372,8 +365,10 @@ public class GeneralClient {
 					break;
 				}
 			}
+			sourceFile.close();
 		}
 		// close file
+
 		int status1 = close(openFileResponse.handle);
 		//System.out.println("GenClient Final statuses "+status1 + " " + status);
 		

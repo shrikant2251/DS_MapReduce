@@ -56,18 +56,31 @@ public class TaskTracker extends TimerTask{
 	
 	void config(String configFilePath)
 	{
-		taskTrackerId= 10;
-		noOfMapThreads=5;
-		noOfReduceThreads=5;
-		JobTrackerIp="127.0.0.1";
-		JobTrackerPort=2000;
-		noOfMapThreadsRemain =noOfMapThreads;
-		noOfReduceThreadsRemain =noOfReduceThreads;
-		heartBeatRate = 3000;
-		genClientConf = "/home/shrikant/git/DS_MapReduce/Config/GeneralClientConf";
-		tmpMapDir = "/home/shrikant/blockDirectory/MapTmp/";
-		tmpReduceDir = "/home/shrikant/blockDirectory/ReduceTmp/";
-		blockDir = "/home/shrikant/blockDirectory/";
+		try{
+			File f = new File(configFilePath);
+			BufferedReader br = new BufferedReader(new FileReader(f));
+			String line = null;
+			while((line=br.readLine())!=null){
+				String []data = line.split("=");
+				switch(data[0]){
+					case "taskTrackerId":taskTrackerId = Integer.parseInt(data[1]);break;
+					case "noOfMapThreads":noOfMapThreads = Integer.parseInt(data[1]);noOfMapThreadsRemain=noOfMapThreads;break;
+					case "noOfReduceThreads":noOfReduceThreads = Integer.parseInt(data[1]);noOfReduceThreadsRemain=noOfReduceThreads;break;
+					case "JobTrackerIp":JobTrackerIp = data[1];break;
+					case "JobTrackerPort": JobTrackerPort=Integer.parseInt(data[1]);break;
+					case "heartBeatRate":heartBeatRate = Integer.parseInt(data[1]);break;
+					case "genClientConf":genClientConf=data[1];break;
+					case "tmpMapDir":tmpMapDir=data[1];break;
+					case "tmpReduceDir":tmpReduceDir=data[1];break;
+					case "blockDir":blockDir=data[1];break;
+				}
+			}
+			br.close();
+			
+		}
+		catch(Exception e){
+			e.printStackTrace();
+		}
 	}
 	
 	byte [] generateHeartBeat()
@@ -181,7 +194,12 @@ public class TaskTracker extends TimerTask{
 	public static void main(String []args){
 		//TODO read the conf file Create the thread pool for number of Map and reduce tasks
 		//Get the IP and port of JobTracker
-		String configFilePath="";
+		if(args.length!=1){
+			System.out.println("Invalid Usage");
+			System.out.println("Usage java <TaskTracker> <configFile Path>");
+			System.exit(0);
+		}
+		String configFilePath=args[0];
 		TimerTask taskTracker = new TaskTracker(configFilePath);
 		Timer timer = new Timer();
 		timer.scheduleAtFixedRate(taskTracker, 0, heartBeatRate);

@@ -12,7 +12,6 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.Iterator;
 import java.util.Random;
 import java.util.Set;
@@ -264,7 +263,7 @@ public class NameNode extends UnicastRemoteObject implements INameNode {
 	public byte[] list(byte[] input) throws RemoteException {
 		// TODO Auto-generated method stub
 		System.out.println("NameNode :: Request for list all files");
-		ListFilesRequest listFileRequest = new ListFilesRequest(input);
+		//ListFilesRequest listFileRequest = new ListFilesRequest(input);
 		ListFilesResponse listFilesResponse = new ListFilesResponse();
 		if (!AllDataStructures.fileNameToBlockNum.isEmpty()) {// There are some
 																// files in HDFS
