@@ -6,6 +6,7 @@ import java.rmi.registry.Registry;
 import java.text.FieldPosition;
 import java.util.concurrent.ExecutionException;
 
+import HDFSPackage.GeneralClient;
 import MapReducePkg.MRRequestResponse.JobStatusRequest;
 import MapReducePkg.MRRequestResponse.*;
 
@@ -14,8 +15,12 @@ public class JobClient {
 	public static String jobTrackerIP="127.0.0.1";
 	public static int jobTrackerPort=2000;
 	public static int jobStatusResponseTime = 3000;
+	public static String genClientConfFile = "/home/shrikant/git/DS_MapReduce/Config/JobClientConf";
 	public JobClient(String confFile) {
 		// TODO Auto-generated constructor stub
+		config(confFile);
+	}
+	void config(String confFile){
 		try{
 			String line =null;
 			File file = new File(confFile);
@@ -26,6 +31,7 @@ public class JobClient {
 					case "jobTrackerIP": jobTrackerIP = data[1];break;
 					case "jobTrackerPort" : jobTrackerPort=Integer.parseInt(data[1]);break;
 					case "jobStatusResponseTime" : jobStatusResponseTime = Integer.parseInt(data[1]);break;
+					case "genClientConfFile" : genClientConfFile = data[1];System.out.println("Config Method path:" + genClientConfFile);break;
 				}
 			}
 			br.close();
@@ -38,7 +44,10 @@ public class JobClient {
 		IJobTracker in = null;
 		JobSubmitResponse jobSubmitResponse = null;
 		byte []jobSubmitResponseData = null;
+		//GeneralClient genClient = new GeneralClient(genClientConfFile);
 		try {
+			//CopyToHDFS
+			///genClient.write(inFile, inFile);
 			Registry myreg = LocateRegistry.getRegistry(jobTrackerIP,jobTrackerPort);
 			in = (IJobTracker) myreg.lookup("JobTracker");
 			JobSubmitRequest jobSubmitRequest = new JobSubmitRequest(mapName,reduceName,inFile,outFile,numOfReducers);
@@ -105,7 +114,8 @@ public class JobClient {
 //		TODO conf file for finding location of JobTracker
 		String m = args[0],r = args[1],i = args[2],o=args[3];
 		int  n = Integer.parseInt(args[4]);
-		JobClient jBClient = new JobClient(args[0]);
+		System.out.println(args[5]);
+		JobClient jBClient = new JobClient(args[5]);
 		jBClient.createJob(m,r,i,o,n);
 	}
 }

@@ -17,8 +17,6 @@ import java.util.Random;
 import java.util.Set;
 
 import HDFSPackage.RequestResponse.*;
-
-import com.google.protobuf.*;
 public class NameNode extends UnicastRemoteObject implements INameNode {
 	
 	public static void config(String filePath) throws FileNotFoundException, IOException
