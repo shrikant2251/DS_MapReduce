@@ -25,7 +25,7 @@ public class DataNode extends UnicastRemoteObject implements IDataNode {
 	public static int dataNodeID = 1,NameNodeport = 1099,DataNodePort=5000;
 	public static String nameNodeIP = "127.0.0.1",dataNodeIP="127.0.0.1";
 	public static int heartBeatRate = 5000;
-	String directoryName = "/home/shrikant/blockDirectory/";
+	static String directoryName = "/home/shrikant/blockDirectory/";
 
 	public static void config(String filePath) throws FileNotFoundException, IOException
 	{
@@ -61,6 +61,7 @@ public class DataNode extends UnicastRemoteObject implements IDataNode {
 			     case "heartBeatRate":
  	 								DataNode.heartBeatRate=Integer.parseInt(array[1]);
  	 								break;
+			     case "directoryName": directoryName = array[1];
  
 			     }
 			    }

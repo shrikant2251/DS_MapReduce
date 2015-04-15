@@ -38,7 +38,7 @@ public class TaskTracker extends TimerTask{
 	static ConcurrentHashMap<MapTaskInfo,Future<?>> mapTracker ;
 	static ConcurrentHashMap<ReducerTaskInfo,Future<?>> reduceTracker;
 	static ExecutorService mapThreadPool,reduceThreadPool;
-	static String tmpMapDir,tmpReduceDir,blockDir;
+	static String tmpMapDir,tmpReduceDir,blockDir,jarPath;
 	
 	// TODO When the TT gets a map request, it places the request in an internal
 //	queue. The consumers of this queue are a fixed number of threads
@@ -75,6 +75,7 @@ public class TaskTracker extends TimerTask{
 					case "tmpMapDir":tmpMapDir=data[1];break;
 					case "tmpReduceDir":tmpReduceDir=data[1];break;
 					case "blockDir":blockDir=data[1];break;
+					case "jarPath": jarPath = data[1];break;
 				}
 			}
 			br.close();
@@ -235,7 +236,7 @@ public class TaskTracker extends TimerTask{
 				System.out.println("Maptask run method Input File :" +directoryName + inputFile);
 				System.out.println("MapTask run method OutputFile :" +tmpDir+mapOutputFile);
 				URL []urls = new URL[1];
-				urls[0] = new File("/home/shrikant/git/DS_MapReduce/DS_MapReduce/bin/MapReduce.jar").toURI().toURL();
+				urls[0] = new File(TaskTracker.jarPath).toURI().toURL();
 				URLClassLoader loader = new URLClassLoader(urls);
 				Class obj = Class.forName(mapTaskName,true,loader);
 				System.out.println("TaskTracker Maptask run method Object bound to " + obj.getName());
@@ -301,7 +302,7 @@ public class TaskTracker extends TimerTask{
 			Class<?> obj = null;
 			try {
 				URL []urls = new URL[1];
-				urls[0] = new File("/home/shrikant/git/DS_MapReduce/DS_MapReduce/bin/MapReduce.jar").toURI().toURL();
+				urls[0] = new File(TaskTracker.jarPath).toURI().toURL();
 				URLClassLoader loader = new URLClassLoader(urls);
 				obj = Class.forName(reducerName,true,loader);
 				System.out.println("TaskTracker ReduceTask reduceName :" + reducerName);

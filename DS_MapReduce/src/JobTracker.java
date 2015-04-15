@@ -41,13 +41,13 @@ public class JobTracker extends UnicastRemoteObject implements IJobTracker{
 			INameNode in = (INameNode) myreg.lookup("NameNode");
 			OpenFileRequest openFileRequest = new OpenFileRequest(fileName,forRead);
 			response = in.openFile(openFileRequest.toProto());
-			System.out.println("In JobTracker Open method Connection to NameNode is successful OpenFile success");
+			//System.out.println("In JobTracker Open method Connection to NameNode is successful OpenFile success");
 		} catch (Exception e) {
 			status = -1;
 			e.printStackTrace();
 		}
 		if (status == -1) {
-			System.out.println("In JobTracker Open method OpenFile Failed");
+			//System.out.println("In JobTracker Open method OpenFile Failed");
 			OpenFileRespose openFileResponse = new OpenFileRespose(-1, -1, new ArrayList<Integer>());
 			response = openFileResponse.toProto();
 		}
@@ -65,16 +65,16 @@ public class JobTracker extends UnicastRemoteObject implements IJobTracker{
 		//IpConversion ipObj = new IpConversion();
 	//	int RMIStatus = 1;
 		for(int blk : blockNumbers){
-			System.out.println("JobTracker getBlockLocation :" + blk);
+			//System.out.println("JobTracker getBlockLocation :" + blk);
 		}
 		try {
 			Registry myreg = LocateRegistry.getRegistry(nameNodeIP,nameNodePort);
 			in = (INameNode) myreg.lookup("NameNode");
 		} catch (Exception e) {
 			//RMIStatus = -1;
-			System.out.println("GeneralClient :: RMI Error locating NameNode Registry.");
+			//System.out.println("GeneralClient :: RMI Error locating NameNode Registry.");
 			e.printStackTrace();
-			System.out.println("JobTracker Method getBlockLocations Failure due to RMI call to NameNode failed");
+			//System.out.println("JobTracker Method getBlockLocations Failure due to RMI call to NameNode failed");
 			return null;
 		}
 		
@@ -86,19 +86,19 @@ public class JobTracker extends UnicastRemoteObject implements IJobTracker{
 			getBlockLocationResponse = in.getBlockLocations(temp);
 		} 
 		catch (Exception e1) {
-			System.out.println("GeneralClient :: Error retrieving block locations.");
+			//System.out.println("GeneralClient :: Error retrieving block locations.");
 			e1.printStackTrace();
 			//return status;
-			System.out.println("JobTracker Method getBlockLocations Failure due to getBlockLocations failed");
+			//System.out.println("JobTracker Method getBlockLocations Failure due to getBlockLocations failed");
 			return null;
 		}
 		
 		BlockLocationResponse blockLocationResponse = new BlockLocationResponse(getBlockLocationResponse);
 		if (blockLocationResponse.status == -1) {
-			System.out.println("JobTracker Method getBlockLocations Failure due to BlockLocationResponse failed");
+			//System.out.println("JobTracker Method getBlockLocations Failure due to BlockLocationResponse failed");
 			return null;
 		}
-		System.out.println("JobTracker getBlockLocation Method number of Blocks : " + blockLocationResponse.blockLocations.size());
+		//System.out.println("JobTracker getBlockLocation Method number of Blocks : " + blockLocationResponse.blockLocations.size());
 		return blockLocationResponse.blockLocations;
 	}
 	@Override
@@ -109,7 +109,7 @@ public class JobTracker extends UnicastRemoteObject implements IJobTracker{
 		
 		// opens the file in HDFS in Read Mode
 		byte[] openResponse;
-		System.out.println("Sending Request to NameNode for Open File " + jsRequest.inputFile );
+		//System.out.println("Sending Request to NameNode for Open File " + jsRequest.inputFile );
 		openResponse = open(jsRequest.inputFile, true);
 		OpenFileRespose openFileResponse = new OpenFileRespose(openResponse);
 
@@ -135,13 +135,13 @@ public class JobTracker extends UnicastRemoteObject implements IJobTracker{
 		tempRed.mapFileForEachReducer = (int)(d1/ d2);
 		tempRed.totalMap = blockLocations.size();
 		tempRed.totalReduce = jsRequest.numReduceTasks;
-		System.out.println("Jobtracker Jobsubmit Map Files for each Reducer :" + tempRed.mapFileForEachReducer);
-		System.out.println("Jobtracker Jobsubmit total Map : "  + tempRed.totalMap +" Total reduce Tasks:" + tempRed.totalReduce);
+		//System.out.println("Jobtracker Jobsubmit Map Files for each Reducer :" + tempRed.mapFileForEachReducer);
+		//System.out.println("Jobtracker Jobsubmit total Map : "  + tempRed.totalMap +" Total reduce Tasks:" + tempRed.totalReduce);
 		tempRed.mapStarted = 0;
 		tempRed.reduceStarted = 0;
 		DSForJT.jobIdtoJobresponse.put(jsResponse.jobId, tempRed);
 		for(BlockLocations block : blockLocations){
-			System.out.println("Jobtracker jobSumit Method for loop block num : " + block.blockNumber);
+			//System.out.println("Jobtracker jobSumit Method for loop block num : " + block.blockNumber);
 			MapTaskInfo tempMapTask = new MapTaskInfo();
 			tempMapTask.jobId = jsResponse.jobId;
 			tempMapTask.taskId = DSForJT.taskId++;
@@ -173,15 +173,15 @@ public class JobTracker extends UnicastRemoteObject implements IJobTracker{
 			}
 			if(DSForJT.jobIdtoTask.containsKey(jsResponse.jobId)){
 				DSForJT.jobIdtoTask.get(jsResponse.jobId).add(tempMapTask);
-				System.out.println("Adding job and map task : job ID ->" + tempMapTask.jobId + " Task id :" + tempMapTask.taskId);
-				System.out.println("MapTask added : " +DSForJT.jobIdtoTask.get(jsResponse.jobId).size());
+				//System.out.println("Adding job and map task : job ID ->" + tempMapTask.jobId + " Task id :" + tempMapTask.taskId);
+				//System.out.println("MapTask added : " +DSForJT.jobIdtoTask.get(jsResponse.jobId).size());
 			}
 			else{
 				HashSet<MapTaskInfo> tempJobList = new HashSet<MapTaskInfo>();
 				tempJobList.add(tempMapTask);
-				System.out.println("Adding job and map task : job ID ->" + tempMapTask.jobId + " Task id :" + tempMapTask.taskId);
+				//System.out.println("Adding job and map task : job ID ->" + tempMapTask.jobId + " Task id :" + tempMapTask.taskId);
 				DSForJT.jobIdtoTask.put(jsResponse.jobId, tempJobList);
-				System.out.println("MapTask added : " +DSForJT.jobIdtoTask.get(jsResponse.jobId).size());
+				//System.out.println("MapTask added : " +DSForJT.jobIdtoTask.get(jsResponse.jobId).size());
 			}
 		}
 		
@@ -221,6 +221,7 @@ public class JobTracker extends UnicastRemoteObject implements IJobTracker{
 	public byte[] heartBeat(byte[] heartBeatRequest) {
 		MapReducePkg.MRRequestResponse.HeartBeatRequest taskTrackerHeatBeat = new MapReducePkg.MRRequestResponse.HeartBeatRequest(heartBeatRequest);
 		int tId = taskTrackerHeatBeat.taskTrackerId;
+		//System.out.println("Heart Beat received from task tracker ID " + tId );
 		/*****************************************************************************/
 		//Assign the MapTasks if Free slots for Map on current Task Tracker
 		ArrayList<MapTaskInfo> mapTaskInfo = new ArrayList<MapTaskInfo>();
@@ -228,37 +229,45 @@ public class JobTracker extends UnicastRemoteObject implements IJobTracker{
 	//	System.out.println("Jobtracker HeartBeat method mapSlots free : " + taskTrackerHeatBeat.numMapSlotsFree);
 		while(taskTrackerHeatBeat.numMapSlotsFree > 0 && DSForJT.TTtoJobs.containsKey(tId)){
 			MapTaskInfo mpTask = new MapTaskInfo();
-			mpTask = DSForJT.TTtoJobs.get(tId).get(0);
-			mapTaskInfo.add(mpTask);
-			DSForJT.TTtoJobs.get(tId).remove(0);
-			ArrayList<Integer> tts = DSForJT.jobstoTT.get(mpTask);
-			System.out.println("JobTracker heartBeat jobs for TaskTracker :" + tId);
-			for( int tt : tts ){
-				DSForJT.TTtoJobs.get(tt).remove(mpTask);
-				System.out.println("Size :" + DSForJT.TTtoJobs.get(tt).size());
+			System.out.println("Accessing TT ID :" + tId);
+			if(DSForJT.TTtoJobs.get(tId).size()>0){
+				mpTask = DSForJT.TTtoJobs.get(tId).get(0);
+				mapTaskInfo.add(mpTask);
+				DSForJT.TTtoJobs.get(tId).remove(0);
+				ArrayList<Integer> tts = DSForJT.jobstoTT.get(mpTask);
+				//System.out.println("JobTracker heartBeat jobs for TaskTracker :" + tId);
+				for( int tt : tts ){
+					DSForJT.TTtoJobs.get(tt).remove(mpTask);
+					//System.out.println("Size :" + DSForJT.TTtoJobs.get(tt).size());
+				}
+				DSForJT.jobstoTT.remove(mpTask);
 			}
-			DSForJT.jobstoTT.remove(mpTask);
-			if(DSForJT.TTtoJobs.get(tId).size()==0){
+			else{
 				DSForJT.TTtoJobs.remove(tId);
+				break;
 			}
 			DSForJT.jobIdtoJobresponse.get(mpTask.jobId).mapStarted++;
 			taskTrackerHeatBeat.numMapSlotsFree--;
+			if(DSForJT.TTtoJobs.get(tId).size()==0){
+				DSForJT.TTtoJobs.remove(tId);
+				break;
+			}
 		}
 		/*****************************************************************************/
 		//Remove the completed MapTasks and add the reducerTask Info for that Map Task
 		//ArrayList<MapTaskStatus> mpStatus = new ArrayList<MapTaskStatus>();
 		for(MapTaskStatus mp : taskTrackerHeatBeat.mapStatus){
 			if(mp.taskCompleted){
-				System.out.println("Jobtracker HeartBeat maptask Completed jobId: " + mp.jobId +"task id:" + mp.taskId);
+				//System.out.println("Jobtracker HeartBeat maptask Completed jobId: " + mp.jobId +"task id:" + mp.taskId);
 				MapTaskInfo removeMap = new MapTaskInfo();
 				removeMap.jobId = mp.jobId;
 				removeMap.taskId = mp.taskId;
 				if(DSForJT.jobIdtoTask.containsKey(mp.jobId)){
-					System.out.println("##########Size of MapTasks :" + DSForJT.jobIdtoTask.get(mp.jobId).size());
+					//System.out.println("##########Size of MapTasks :" + DSForJT.jobIdtoTask.get(mp.jobId).size());
 					DSForJT.jobIdtoTask.get(mp.jobId).remove(removeMap);
-					System.out.println("#############Size of MapTasks :" + DSForJT.jobIdtoTask.get(mp.jobId).size());
+					//System.out.println("#############Size of MapTasks :" + DSForJT.jobIdtoTask.get(mp.jobId).size());
 					if(DSForJT.jobIdtoTask.get(mp.jobId).size()==0){
-						System.out.println("Jobtracker HeartBeat All map tasks completed *************");
+						//System.out.println("Jobtracker HeartBeat All map tasks completed *************");
 						DSForJT.mapCompletedJobs.add(mp.jobId);
 						DSForJT.jobIdtoTask.remove(mp.jobId);
 					}
@@ -300,12 +309,13 @@ public class JobTracker extends UnicastRemoteObject implements IJobTracker{
 	//	System.out.println("Jobtracker HeartBeat method ReduceSlots free : " + taskTrackerHeatBeat.numReduceSlotsFree);
 		while(taskTrackerHeatBeat.numReduceSlotsFree>0 && DSForJT.mapCompletedJobs.size()>0){
 				int jobId = DSForJT.mapCompletedJobs.first();
-				System.out.println("JobTracker HeartBeat method Sendig to ReduceTask JobId:" + jobId);
-				System.out.println("^^^^^ ^^^^^ Number of Reducetask for job :" + DSForJT.jobIdtoReduceTask.get(jobId).size());
-				for(ReducerTaskInfo r:DSForJT.jobIdtoReduceTask.get(jobId)){
-					for(String n:r.mapOutputFiles)
-					System.out.println("^^^^ map FileName" + n);
-				}
+				//System.out.println("JobTracker HeartBeat method Sendig to ReduceTask JobId:" + jobId);
+				//System.out.println("^^^^^ ^^^^^ Number of Reducetask for job :" + DSForJT.jobIdtoReduceTask.get(jobId).size());
+				/*for(ReducerTaskInfo r:DSForJT.jobIdtoReduceTask.get(jobId)){
+					for(String n:r.mapOutputFiles){
+					//System.out.println("^^^^ map FileName" + n);
+					}
+				}*/
 				while(taskTrackerHeatBeat.numReduceSlotsFree>0 && DSForJT.jobIdtoReduceTask.containsKey(jobId)){
 					if(DSForJT.jobIdtoReduceTask.get(jobId).size()>0){
 							reducerTaskInfo.add(DSForJT.jobIdtoReduceTask.get(jobId).get(0));
@@ -331,9 +341,10 @@ public class JobTracker extends UnicastRemoteObject implements IJobTracker{
 		//JobTracker Port
 		File conf = new File(ConfFile);
 		if(!conf.exists()){
-			System.out.println("JobTracker Conf File does not exists please check the Path");
+			//System.out.println("JobTracker Conf File does not exists please check the Path");
 			System.exit(0);
 		}
+		//System.out.println("in JobTracker Conf");
 		try{
 			BufferedReader reader = new BufferedReader(new FileReader(conf));
 			String line=null;
@@ -360,13 +371,13 @@ public class JobTracker extends UnicastRemoteObject implements IJobTracker{
 						if(!DSForJT.TTidToTTLoc.containsKey(Tid))
 							DSForJT.TTidToTTLoc.put(Tid, dl);
 						else{
-							System.out.println("JobTracker Conf Method TaskTracker Id already present");
+							//System.out.println("JobTracker Conf Method TaskTracker Id already present");
 						}
 						if(!DSForJT.TTLocToTTid.containsKey(dl))
 							DSForJT.TTLocToTTid.put(dl, Tid);
 				
 						else{
-							System.out.println("JobTracker Conf Method TaskTracker IP,port Already present");
+							//System.out.println("JobTracker Conf Method TaskTracker IP,port Already present");
 						}
 						break;
 					case "JobTrackerIp":
@@ -392,7 +403,7 @@ public class JobTracker extends UnicastRemoteObject implements IJobTracker{
 			System.exit(0);
 		}
 	
-		System.out.println("Get the Locations of TaskTrackers using Conf File");
+		//System.out.println("Get the Locations of TaskTrackers using Conf File");
 		/*IpConversion ipconv = new IpConversion();
 		int ip,port=5000;
 		String tmp = "127.0.0.1";
@@ -405,8 +416,11 @@ public class JobTracker extends UnicastRemoteObject implements IJobTracker{
 		int TTid = DSForJT.TTLocToTTid.get(dls);*/
 		try {
 			//System.setProperty( "java.rmi.server.hostname", AllDataStructures.nameNodeIP ) ;
-			Registry reg = LocateRegistry.createRegistry(DSForJT.JobTrackerPort);
+			
 			JobTracker obj = new JobTracker(args[0]);
+			//System.out.println("JobTracker Ip:" + DSForJT.JobTrackerIp + "  " + DSForJT.JobTrackerPort);
+			Registry reg = LocateRegistry.createRegistry(DSForJT.JobTrackerPort);
+			
 			//obj.();
 			reg.rebind("JobTracker", obj);
 			System.out.println("JobTracker server is running");
@@ -436,8 +450,8 @@ class JobResponseData{
 }
 class DSForJT{
 	public static int jobId=0,taskId=0;
-	public static int JobTrackerPort = 2000;
-	public static String JobTrackerIp = "127.0.0.1";
+	public static int JobTrackerPort;
+	public static String JobTrackerIp;
 //	JonID to TaskTracker Map
 	//public static HashMap<Integer,ArrayList<BlockLocations> > jobIdtoTaskTracker = new HashMap<Integer,ArrayList<BlockLocations> >();
 	//TaskTracker Id to Number of slots HashMap<TaskTrackerId,NumberOfSlots>

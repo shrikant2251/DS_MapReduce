@@ -12,8 +12,8 @@ import MapReducePkg.MRRequestResponse.*;
 
 
 public class JobClient {
-	public static String jobTrackerIP="127.0.0.1";
-	public static int jobTrackerPort=2000;
+	public static String jobTrackerIP;
+	public static int jobTrackerPort;
 	public static int jobStatusResponseTime = 3000;
 	public static String genClientConfFile = "/home/shrikant/git/DS_MapReduce/Config/JobClientConf";
 	public JobClient(String confFile) {
@@ -21,14 +21,15 @@ public class JobClient {
 		config(confFile);
 	}
 	void config(String confFile){
+		System.out.println("Conf File update");
 		try{
 			String line =null;
 			File file = new File(confFile);
 			BufferedReader br = new BufferedReader(new FileReader(file));
 			while((line=br.readLine())!=null){
 				String []data = line.split("=");
-				switch (line) {
-					case "jobTrackerIP": jobTrackerIP = data[1];break;
+				switch (data[0]) {
+					case "jobTrackerIP": jobTrackerIP = data[1];System.out.println(data[1]);break;
 					case "jobTrackerPort" : jobTrackerPort=Integer.parseInt(data[1]);break;
 					case "jobStatusResponseTime" : jobStatusResponseTime = Integer.parseInt(data[1]);break;
 					case "genClientConfFile" : genClientConfFile = data[1];System.out.println("Config Method path:" + genClientConfFile);break;
@@ -48,6 +49,7 @@ public class JobClient {
 		try {
 			//CopyToHDFS
 			///genClient.write(inFile, inFile);
+			System.out.println(jobTrackerIP + " " + jobTrackerPort);
 			Registry myreg = LocateRegistry.getRegistry(jobTrackerIP,jobTrackerPort);
 			in = (IJobTracker) myreg.lookup("JobTracker");
 			JobSubmitRequest jobSubmitRequest = new JobSubmitRequest(mapName,reduceName,inFile,outFile,numOfReducers);
@@ -116,6 +118,7 @@ public class JobClient {
 		int  n = Integer.parseInt(args[4]);
 		System.out.println(args[5]);
 		JobClient jBClient = new JobClient(args[5]);
+		System.out.println("Main Method :" + JobClient.jobTrackerIP + " " + JobClient.jobTrackerPort);
 		jBClient.createJob(m,r,i,o,n);
 	}
 }

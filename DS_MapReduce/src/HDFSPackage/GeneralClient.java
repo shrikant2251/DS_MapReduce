@@ -418,8 +418,8 @@ public class GeneralClient {
 			String sourceFilePath="/home/shrikant/trim_path.py";
 			//String data = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZKedar";
 			//int st = client.write("tmp2.txt",data.getBytes() );
-			int st = client.write("tempFile.txt",sourceFilePath);
-			int st1 = client.read("tempFile.txt","/home/shrikant/blockDirectory/tempRead");
+			int st = client.write("tempFile2.txt",sourceFilePath);
+			int st1 = client.read("tempFile2.txt","/home/shrikant/blockDirectory/tempRead");
 		//	System.out.println("Status of read = " + st1  + "status of write = " + st);
 			//client.list();
 		} catch (Exception e) {
