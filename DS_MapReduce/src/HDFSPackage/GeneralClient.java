@@ -415,7 +415,7 @@ public class GeneralClient {
 			
 		try {
 			GeneralClient client = new GeneralClient(args[0]);
-			String sourceFilePath="/home/shrikant/temp";
+			String sourceFilePath="/home/shrikant/trim_path.py";
 			//String data = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZKedar";
 			//int st = client.write("tmp2.txt",data.getBytes() );
 			int st = client.write("tempFile.txt",sourceFilePath);

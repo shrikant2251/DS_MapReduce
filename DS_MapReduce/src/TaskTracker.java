@@ -5,6 +5,8 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
@@ -152,7 +154,7 @@ public class TaskTracker extends TimerTask{
 			Future<?> future = mapThreadPool.submit(mapTask);
 			mapTracker.put(mti, future);
 		}
-		System.out.println("AAAAAAAAAAAAA : TaskTracker HandleHeartBeat :" + reduceTasks.size());
+		//System.out.println("AAAAAAAAAAAAA : TaskTracker HandleHeartBeat :" + reduceTasks.size());
 		for(ReducerTaskInfo rti : reduceTasks)
 		{
 			for(String m:rti.mapOutputFiles){
@@ -232,7 +234,10 @@ public class TaskTracker extends TimerTask{
 				System.out.println("TaskTracker MapTask Class run method mapName : " + mapTaskName);
 				System.out.println("Maptask run method Input File :" +directoryName + inputFile);
 				System.out.println("MapTask run method OutputFile :" +tmpDir+mapOutputFile);
-				Class obj = Class.forName(mapTaskName);
+				URL []urls = new URL[1];
+				urls[0] = new File("/home/shrikant/git/DS_MapReduce/DS_MapReduce/bin/MapReduce.jar").toURI().toURL();
+				URLClassLoader loader = new URLClassLoader(urls);
+				Class obj = Class.forName(mapTaskName,true,loader);
 				System.out.println("TaskTracker Maptask run method Object bound to " + obj.getName());
 				//Method method = obj.getMethod("map", new Class[]{String.class});
 				IMapper mapObj = (IMapper) obj.newInstance();
@@ -295,7 +300,10 @@ public class TaskTracker extends TimerTask{
 		{
 			Class<?> obj = null;
 			try {
-				obj = Class.forName(reducerName);
+				URL []urls = new URL[1];
+				urls[0] = new File("/home/shrikant/git/DS_MapReduce/DS_MapReduce/bin/MapReduce.jar").toURI().toURL();
+				URLClassLoader loader = new URLClassLoader(urls);
+				obj = Class.forName(reducerName,true,loader);
 				System.out.println("TaskTracker ReduceTask reduceName :" + reducerName);
 				//Method method = obj.getMethod("reduce", (Class<?>)null);
 				IReducer reduceObj = (IReducer)obj.newInstance();
