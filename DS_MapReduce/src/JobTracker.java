@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.TreeSet;
+import java.util.concurrent.ConcurrentHashMap;
 
 import HDFSPackage.INameNode;
 import HDFSPackage.IpConversion;
@@ -229,8 +230,8 @@ public class JobTracker extends UnicastRemoteObject implements IJobTracker{
 	//	System.out.println("Jobtracker HeartBeat method mapSlots free : " + taskTrackerHeatBeat.numMapSlotsFree);
 		while(taskTrackerHeatBeat.numMapSlotsFree > 0 && DSForJT.TTtoJobs.containsKey(tId)){
 			MapTaskInfo mpTask = new MapTaskInfo();
-			System.out.println("Accessing TT ID :" + tId);
-			if(DSForJT.TTtoJobs.get(tId).size()>0){
+		//	System.out.println("Accessing TT ID :" + tId);
+	//		if(DSForJT.TTtoJobs.get(tId).size()>0){
 				mpTask = DSForJT.TTtoJobs.get(tId).get(0);
 				mapTaskInfo.add(mpTask);
 				DSForJT.TTtoJobs.get(tId).remove(0);
@@ -241,11 +242,11 @@ public class JobTracker extends UnicastRemoteObject implements IJobTracker{
 					//System.out.println("Size :" + DSForJT.TTtoJobs.get(tt).size());
 				}
 				DSForJT.jobstoTT.remove(mpTask);
-			}
+		/*	}
 			else{
 				DSForJT.TTtoJobs.remove(tId);
 				break;
-			}
+			}*/
 			DSForJT.jobIdtoJobresponse.get(mpTask.jobId).mapStarted++;
 			taskTrackerHeatBeat.numMapSlotsFree--;
 			if(DSForJT.TTtoJobs.get(tId).size()==0){
@@ -275,6 +276,7 @@ public class JobTracker extends UnicastRemoteObject implements IJobTracker{
 				String mapFile = new String("Job_"+mp.jobId + "_map_" + mp.taskId);
 							
 				if(DSForJT.jobIdtoReduceTask.containsKey(mp.jobId) ){
+					System.out.println("Adding Map file to Reduce Task Info:" + mapFile);
 					int last = DSForJT.jobIdtoReduceTask.get(mp.jobId).size()-1;
 					if(last+1 == DSForJT.jobIdtoJobresponse.get(mp.jobId).totalReduce){
 						DSForJT.jobIdtoReduceTask.get(mp.jobId).get(last).mapOutputFiles.add(mapFile);
@@ -309,6 +311,7 @@ public class JobTracker extends UnicastRemoteObject implements IJobTracker{
 	//	System.out.println("Jobtracker HeartBeat method ReduceSlots free : " + taskTrackerHeatBeat.numReduceSlotsFree);
 		while(taskTrackerHeatBeat.numReduceSlotsFree>0 && DSForJT.mapCompletedJobs.size()>0){
 				int jobId = DSForJT.mapCompletedJobs.first();
+				System.out.println("Starting Reduce Job JobId:" + jobId);
 				//System.out.println("JobTracker HeartBeat method Sendig to ReduceTask JobId:" + jobId);
 				//System.out.println("^^^^^ ^^^^^ Number of Reducetask for job :" + DSForJT.jobIdtoReduceTask.get(jobId).size());
 				/*for(ReducerTaskInfo r:DSForJT.jobIdtoReduceTask.get(jobId)){
@@ -457,18 +460,18 @@ class DSForJT{
 	//TaskTracker Id to Number of slots HashMap<TaskTrackerId,NumberOfSlots>
 	//public static HashMap<Integer, MapReduceSlots> taskTrackerSlots = new HashMap<Integer,MapReduceSlots>();
 
-	public static HashMap<Integer,DataNodeLocation> TTidToTTLoc = new HashMap<Integer,DataNodeLocation>();
-	public static HashMap<DataNodeLocation,Integer> TTLocToTTid = new HashMap<DataNodeLocation,Integer>();
+	public static ConcurrentHashMap<Integer,DataNodeLocation> TTidToTTLoc = new ConcurrentHashMap<Integer,DataNodeLocation>();
+	public static ConcurrentHashMap<DataNodeLocation,Integer> TTLocToTTid = new ConcurrentHashMap<DataNodeLocation,Integer>();
 	//HashMap contains Task Tracker Id to MaptaskInfo(JobId,MapTaskId) arrayList 
-	public static HashMap<Integer, ArrayList<MapTaskInfo>> TTtoJobs = new HashMap<Integer,ArrayList<MapTaskInfo>>();
+	public static ConcurrentHashMap<Integer, ArrayList<MapTaskInfo>> TTtoJobs = new ConcurrentHashMap<Integer,ArrayList<MapTaskInfo>>();
 	//HashMap MapTaskInfo(jobId,TaskId) to TaskTracker Id arraylist
-	public static HashMap<MapTaskInfo, ArrayList<Integer>> jobstoTT = new HashMap<MapTaskInfo,ArrayList<Integer>>();
+	public static ConcurrentHashMap<MapTaskInfo, ArrayList<Integer>> jobstoTT = new ConcurrentHashMap<MapTaskInfo,ArrayList<Integer>>();
 	//HashMap JobId to MapTaskInfo(jobId,TaskId) to check map task completion
-	public static HashMap<Integer, HashSet<MapTaskInfo>> jobIdtoTask = new HashMap<Integer, HashSet<MapTaskInfo>>();
+	public static ConcurrentHashMap<Integer, HashSet<MapTaskInfo>> jobIdtoTask = new ConcurrentHashMap<Integer, HashSet<MapTaskInfo>>();
 	//HashMap JobId to ReduceTaskInfo arrayList this contains the ReduceTask list to passed to TT after completion of all MapTasks
-	public static HashMap<Integer,ArrayList<ReducerTaskInfo>> jobIdtoReduceTask = new HashMap<Integer, ArrayList<ReducerTaskInfo>>();
+	public static ConcurrentHashMap<Integer,ArrayList<ReducerTaskInfo>> jobIdtoReduceTask = new ConcurrentHashMap<Integer, ArrayList<ReducerTaskInfo>>();
 	//HashMap JobId to ReducerName and Number of Files to one reducer Task Info 
-	public static HashMap<Integer,JobResponseData> jobIdtoJobresponse = new HashMap<Integer,JobResponseData>();
+	public static ConcurrentHashMap<Integer,JobResponseData> jobIdtoJobresponse = new ConcurrentHashMap<Integer,JobResponseData>();
 	//TreeSet jobId to Completed Maptasks
 	public static TreeSet<Integer> mapCompletedJobs = new TreeSet<Integer>();
 	public static TreeSet<Integer> reduceCompletedJobs = new TreeSet<Integer>();

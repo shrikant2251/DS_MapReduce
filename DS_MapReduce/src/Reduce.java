@@ -1,5 +1,5 @@
 
-public class Reduce1 implements IReducer{
+public class Reduce implements IReducer{
 
 	@Override
 	public String reduce(String text) {

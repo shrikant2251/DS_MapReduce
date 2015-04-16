@@ -89,11 +89,12 @@ public class JobClient {
 						//TODO print the Job Completion status 
 						System.out.println("Num of Map started : " + jsResponse.numMapTasksStarted + "total Map :" + jsResponse.totalMapTasks);;
 						if(jsResponse.numMapTasksStarted <= jsResponse.totalMapTasks){
-							System.out.println("JobId : " + jobSubmitResponse.jobId +" -->" + (jsResponse.numMapTasksStarted / jsResponse.totalMapTasks)*100 + "% of MapTask Started");
+							System.out.println("JobId : " + jobSubmitResponse.jobId +" -->" + ((double)jsResponse.numMapTasksStarted / (double)jsResponse.totalMapTasks)*100 + "% of MapTask Started");
 						}
 						
 						if(jsResponse.numReduceTasksStarted <= jsResponse.totalReduceTasks){
-							System.out.println("JobId : " + jobSubmitResponse.jobId +" -->" + (jsResponse.numReduceTasksStarted / jsResponse.totalReduceTasks)*100 + "% of ReduceTask Started");
+							System.out.println("Num of Reducer started : " + jsResponse.numReduceTasksStarted + "total Reduce :" + jsResponse.totalReduceTasks);;
+							System.out.println("JobId : " + jobSubmitResponse.jobId +" -->" + ((double)jsResponse.numReduceTasksStarted / (double)jsResponse.totalReduceTasks)*100 + "% of ReduceTask Started");
 						}
 
 					}

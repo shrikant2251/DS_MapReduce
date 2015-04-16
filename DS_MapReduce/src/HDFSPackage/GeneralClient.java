@@ -415,11 +415,12 @@ public class GeneralClient {
 			
 		try {
 			GeneralClient client = new GeneralClient(args[0]);
-			String sourceFilePath="/home/shrikant/trim_path.py";
+			String sourceFilePath="/home/shrikant/temp1";
 			//String data = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZKedar";
 			//int st = client.write("tmp2.txt",data.getBytes() );
 			int st = client.write("tempFile2.txt",sourceFilePath);
-			int st1 = client.read("tempFile2.txt","/home/shrikant/blockDirectory/tempRead");
+			System.out.println("File Written to HDFS !!");
+			//int st1 = client.read("tempFile2.txt","/home/shrikant/blockDirectory/tempRead");
 		//	System.out.println("Status of read = " + st1  + "status of write = " + st);
 			//client.list();
 		} catch (Exception e) {

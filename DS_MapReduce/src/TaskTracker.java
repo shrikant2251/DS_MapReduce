@@ -38,7 +38,7 @@ public class TaskTracker extends TimerTask{
 	static ConcurrentHashMap<MapTaskInfo,Future<?>> mapTracker ;
 	static ConcurrentHashMap<ReducerTaskInfo,Future<?>> reduceTracker;
 	static ExecutorService mapThreadPool,reduceThreadPool;
-	static String tmpMapDir,tmpReduceDir,blockDir,jarPath;
+	static String tmpMapDir,tmpReduceDir,blockDir,jarPath,searchKey;
 	
 	// TODO When the TT gets a map request, it places the request in an internal
 //	queue. The consumers of this queue are a fixed number of threads
@@ -112,7 +112,7 @@ public class TaskTracker extends TimerTask{
 				{
 					mapTracker.remove(key);
 					System.out.println("TaskTracker Map Completed Jobid:" + mts.jobId + " TaskId:" + mts.taskId);
-					System.out.println("No of Mapthreads free:" + noOfMapThreadsRemain );
+				//	System.out.println("No of Mapthreads free:" + noOfMapThreadsRemain );
 					noOfMapThreadsRemain++;
 				}
 			}
@@ -239,7 +239,7 @@ public class TaskTracker extends TimerTask{
 				urls[0] = new File(TaskTracker.jarPath).toURI().toURL();
 				URLClassLoader loader = new URLClassLoader(urls);
 				Class obj = Class.forName(mapTaskName,true,loader);
-				System.out.println("TaskTracker Maptask run method Object bound to " + obj.getName());
+				//System.out.println("TaskTracker Maptask run method Object bound to " + obj.getName());
 				//Method method = obj.getMethod("map", new Class[]{String.class});
 				IMapper mapObj = (IMapper) obj.newInstance();
 				BufferedReader buffer = new BufferedReader(new FileReader(directoryName+inputFile));
@@ -254,9 +254,11 @@ public class TaskTracker extends TimerTask{
 					}
 					String output = "";
 					
-					output = mapObj.map(line);
-					if(output!=null)
-					writer.write(output+"\n");
+					output = mapObj.map(line,TaskTracker.searchKey);
+					if(output!=null){
+						writer.write(output+"\n");
+						System.out.println("Search Key Found :" + output);
+					}
 				}
 				writer.flush();
 				writer.close();
@@ -318,7 +320,7 @@ public class TaskTracker extends TimerTask{
 				
 				String tmpFile = tmpDir+outputFile+"tmp";
 				int tmpCnt = 0;//mapOutputFiles.size();
-				System.out.println("%%%%%%%%%%%%%%%%%%%%%%%%%%  MapOutPutFile size :" + mapOutputFiles.size());
+			//	System.out.println("%%%%%%%%%%%%%%%%%%%%%%%%%%  MapOutPutFile size :" + mapOutputFiles.size());
 				for (String inputFile : mapOutputFiles)
 				{
 						/*TODO HDFSPackage.GeneralClient generalClient = new HDFSPackage.GeneralClient();
@@ -327,8 +329,8 @@ public class TaskTracker extends TimerTask{
 					System.out.println("TaskTracker ReduceTask run method " + outputFile);
 					
 					int status = genClient.read(inputFile, tmpFile+""+tmpCnt);
-					System.out.println("##################### TaskTracker ReduceTask reading file from HDFS :" + inputFile + " to Local File:" + tmpFile+""+tmpCnt);
-					System.out.println("############# Read Status :" + status);
+			//		System.out.println("##################### TaskTracker ReduceTask reading file from HDFS :" + inputFile + " to Local File:" + tmpFile+""+tmpCnt);
+			//		System.out.println("############# Read Status :" + status);
 					if(status == -1) continue;
 					tmpCnt++;
 					BufferedReader buffer = new BufferedReader(new FileReader(tmpFile+""+(tmpCnt-1)+"GenClientRead"));
@@ -361,7 +363,7 @@ public class TaskTracker extends TimerTask{
 					}
 					rd.close();
 				}*/
-				System.out.println("!!!!!!!!!!!!!!!!!!!!!!! ReduceTask Local File :" + tmpDir + outputFile);
+			//	System.out.println("!!!!!!!!!!!!!!!!!!!!!!! ReduceTask Local File :" + tmpDir + outputFile);
 				genClient.write(outputFile, tmpDir+outputFile);
 			} catch (Exception e) {
 				// TODO Auto-generated catch block

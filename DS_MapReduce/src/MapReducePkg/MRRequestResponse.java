@@ -382,7 +382,7 @@ public interface MRRequestResponse {
 			//mapOutputFiles = new ArrayList<String>();
 			for(String  file : mapOutputFiles){
 				taskBuilder.addMapOutputFiles(file);
-				System.out.println("XXXXXXXXXXXX Request Response set MapOutFile :" + file);
+				//System.out.println("XXXXXXXXXXXX Request Response set MapOutFile :" + file);
 			}
 			return taskBuilder;
 		}
@@ -463,7 +463,7 @@ public interface MRRequestResponse {
 			}
 			
 			for(ReducerTaskInfo rTask : reduceTasks){
-				System.out.println("AAAAAAAAAAAAAA HearBeatResponse toProto");
+				//System.out.println("AAAAAAAAAAAAAA HearBeatResponse toProto");
 				builder.addReduceTasks(rTask.toProtoObject());
 			}
 			return builder.build().toByteArray(); 
