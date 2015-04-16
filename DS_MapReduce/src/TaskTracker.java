@@ -76,6 +76,7 @@ public class TaskTracker extends TimerTask{
 					case "tmpReduceDir":tmpReduceDir=data[1];break;
 					case "blockDir":blockDir=data[1];break;
 					case "jarPath": jarPath = data[1];break;
+					case "searchKey": searchKey = data[1];break;
 				}
 			}
 			br.close();
@@ -257,7 +258,10 @@ public class TaskTracker extends TimerTask{
 					output = mapObj.map(line,TaskTracker.searchKey);
 					if(output!=null){
 						writer.write(output+"\n");
-						System.out.println("Search Key Found :" + output);
+						System.out.println("*********  Search Key Found :" + output);
+					}
+					else{
+						System.out.println("*********  Search Key Not Found :" + output);
 					}
 				}
 				writer.flush();

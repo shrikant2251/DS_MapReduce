@@ -320,11 +320,14 @@ public class JobTracker extends UnicastRemoteObject implements IJobTracker{
 					}
 				}*/
 				while(taskTrackerHeatBeat.numReduceSlotsFree>0 && DSForJT.jobIdtoReduceTask.containsKey(jobId)){
+					System.out.println("JobTracker Starting reduce Task :" + jobId + " Starting reduce Task :"+ DSForJT.jobIdtoJobresponse.get(jobId).reduceStarted);
+					System.out.println("JobTracker Reduce Task Left :" + DSForJT.jobIdtoReduceTask.get(jobId).size());
 					if(DSForJT.jobIdtoReduceTask.get(jobId).size()>0){
 							reducerTaskInfo.add(DSForJT.jobIdtoReduceTask.get(jobId).get(0));
 							DSForJT.jobIdtoReduceTask.get(jobId).remove(0);
 							taskTrackerHeatBeat.numReduceSlotsFree--;
 							DSForJT.jobIdtoJobresponse.get(jobId).reduceStarted++;
+							System.out.println("Update Reduce Task start Num :" + DSForJT.jobIdtoJobresponse.get(jobId).reduceStarted);
 					}
 					else{
 						DSForJT.mapCompletedJobs.remove(jobId);
