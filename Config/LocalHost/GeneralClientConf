@@ -1,3 +1,3 @@
-nameNodeIP=10.42.0.62
+nameNodeIP=127.0.0.1
 nameNodePort=20000
 blockSize=100

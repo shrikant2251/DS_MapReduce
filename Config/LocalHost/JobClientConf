@@ -1,0 +1,4 @@
+jobTrackerIP=127.0.0.1
+jobTrackerPort=40000
+jobStatusResponseTime=3000
+genClientConfFile=/home/shrikant/git/DS_MapReduce/Config/GeneralClientConf

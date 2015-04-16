@@ -330,6 +330,7 @@ public class JobTracker extends UnicastRemoteObject implements IJobTracker{
 							System.out.println("Update Reduce Task start Num :" + DSForJT.jobIdtoJobresponse.get(jobId).reduceStarted);
 					}
 					else{
+						
 						DSForJT.mapCompletedJobs.remove(jobId);
 						DSForJT.jobIdtoReduceTask.remove(jobId);
 						DSForJT.reduceCompletedJobs.add(jobId);

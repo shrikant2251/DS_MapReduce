@@ -1,0 +1,10 @@
+NameNodeIp=127.0.0.1
+NameNodePort=20000
+TaskTrackerId=10
+TaskTrackerIp=127.0.0.1
+TaskTrackerPort=50000
+TaskTrackerId=20
+TaskTrackerIp=127.0.0.1
+TaskTrackerPort=60000
+JobTrackerIp=127.0.0.1
+JobTrackerPort=40000

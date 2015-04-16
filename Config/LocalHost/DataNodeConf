@@ -1,7 +1,7 @@
 dataNodeID=10
-dataNodeIP=10.42.0.62
+dataNodeIP=127.0.0.1
 dataNodePort=50000
-nameNodeIP=10.42.0.62
+nameNodeIP=127.0.0.1
 nameNodePort=20000
 heartBeatRate=5000
 directoryName=/home/shrikant/blockDirectory/

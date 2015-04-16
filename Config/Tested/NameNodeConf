@@ -1,5 +1,5 @@
 threshold=20000
 replicationFactor=2
-nameNodeIP=10.42.0.62
+nameNodeIP=10.1.131.149
 nameNodePort=20000
-blockSize=100
+blockSize=20

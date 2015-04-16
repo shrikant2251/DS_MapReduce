@@ -1,0 +1,10 @@
+NameNodeIp=10.1.131.149
+NameNodePort=20000
+TaskTrackerId=10
+TaskTrackerIp=10.1.131.149
+TaskTrackerPort=50000
+TaskTrackerId=20
+TaskTrackerIp=10.1.131.181
+TaskTrackerPort=60000
+JobTrackerIp=10.1.131.149
+JobTrackerPort=40000

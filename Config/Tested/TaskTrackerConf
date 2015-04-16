@@ -1,0 +1,11 @@
+taskTrackerId=10
+noOfMapThreads=5
+noOfReduceThreads=5
+JobTrackerIp=10.1.131.149
+JobTrackerPort=40000
+heartBeatRate=10000
+genClientConf=/home/shrikant/git/DS_MapReduce/Config/GeneralClientConf
+tmpMapDir=/home/shrikant/blockDirectory/MapTmp/
+tmpReduceDir=/home/shrikant/blockDirectory/ReduceTmp/
+blockDir=/home/shrikant/blockDirectory/
+jarPath=/home/shrikant/git/DS_MapReduce/DS_MapReduce/bin/MapReduce.jar
